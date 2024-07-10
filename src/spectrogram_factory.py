@@ -73,9 +73,8 @@ class SpectrogramFactory:
         return spectros
     
     def get_numpy_dataset(self, 
-                          audio_or_file_list : list[Union[str, np.ndarray]], 
-                          use_processor : bool,
-                          fit_processor :  bool
+                          audio_or_file_list : Union[list[Union[str, np.ndarray]], list[MultiSpectrogram]], 
+                          use_processor : bool
                           ) -> np.ndarray:
         
         if self.__config.audio_length is None:
@@ -85,11 +84,6 @@ class SpectrogramFactory:
             raise Exception("Cannot create a numpy dataset with no audio padding function provided. \n" + \
                             "Set audio_padder argument in the factory constructor.")
 
-        if use_processor and fit_processor:
-            if isinstance(self.__processor, AbstractFitDataProcessor):
-                self.__processor.fit() # TODO fit on datas
-            else:
-                raise Exception("Can only fit the processor on AbstractFitProcessor")
         spectros = self.get_spectrograms(audio_or_file_list)
         X_data = np.zeros((len(spectros), *spectros[0].shape))
         for i, spec in enumerate(spectros):

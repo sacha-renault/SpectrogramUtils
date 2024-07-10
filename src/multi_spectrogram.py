@@ -48,7 +48,7 @@ class MultiSpectrogram:
         """
         if process_data:
             if self.__processor is not None:
-                return self.__processor.forward(self.__data)
+                return self.__processor.f_forward(self.__data)
             else:
                 raise Exception("Askep processed data without providing a processor")
         else:
