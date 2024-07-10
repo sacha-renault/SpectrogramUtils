@@ -5,7 +5,7 @@ import soundfile as sf
 import librosa
 
 from .config import Config
-from .data_processor import AbstractDataProcessor
+from .processors.abstract_data_processor import AbstractDataProcessor
 from .multi_spectrogram import MultiSpectrogram
 from .data import AudioPadding
 
