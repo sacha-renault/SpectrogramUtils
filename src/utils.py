@@ -53,22 +53,17 @@ def get_values_for_stft_shape(desired_stft_shape: tuple[int, int]) -> list:
 def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> list[np.ndarray]:
     # Ensure the input array is at most 2D
     assert len(audio_array.shape) <= 2
-    results : list[np.ndarray] = []
 
-    # Handle the case where the input is a 1D array (single channel)
-    if len(audio_array.shape) == 1:
-        audio_array = np.expand_dims(audio_array, axis=0)
+    # process stft
+    result = librosa.stft(audio_array, **stft_kwargs)
 
-    for channel in audio_array:
-        stft = librosa.stft(channel, **stft_kwargs)
-        results.append(stft)
-
-    if not all(r.shape == results[0].shape for r in results):
-        raise Exception("Not all stft where the same shape ... Double check input data")
+    # check if it was multi-channel
+    if len(result.shape) == 2:
+        return [result]
+    elif len(result.shape) == 3:
+        return [r for r in result]
     else:
-        return results
+        raise Exception("Unknown shape during stft process")
 
 
 
-stft = librosa.stft(np.random.rand(15000), hop_length=32, n_fft = 511)
-print(stft.shape)
