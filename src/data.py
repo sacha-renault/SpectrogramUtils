@@ -1,6 +1,8 @@
 from enum import Enum, auto
 from typing import Callable
 
+from .utils import lpad_lcut, rpad_rcut
+
 class DisplayType(Enum):
     # Display the average bewteen left and right spectrogram
     MEAN = auto()
@@ -18,13 +20,13 @@ class AudioPadding:
     NONE = None
     """No padding at all"""
 
-    RPAD_RCUT = None
+    RPAD_RCUT = rpad_rcut
     """
         Add zeros values on the right if the audio is too small. 
         Cut the end of the audio if too long.
     """
 
-    LPAD_LCUT = None
+    LPAD_LCUT = lpad_lcut
     """
         Add zeros on the left if the audio is too small. 
         Cut the start of the audio if too long 
