@@ -35,7 +35,7 @@ class MultiSpectrogram:
         self.__data = data
 
     
-    def data(self, process_data : bool = False) -> np.ndarray:
+    def to_data(self, process_data : bool = False) -> np.ndarray:
         """#### return a stereo spectrogram. Indexes precisions :
         - 2*n : amplitude of stft at index n
         - 2*n + 1 : phase of stft at index n
@@ -83,13 +83,13 @@ class MultiSpectrogram:
             - display_type (DisplayType, optional): How to display the stereo spectrogram. Defaults to DisplayType.MEAN.
         """
         # init new data
-        display_data = np.zeros_like(self.data(use_processor)[0], dtype=np.complex128)
+        display_data = np.zeros_like(self.to_data(use_processor)[0], dtype=np.complex128)
 
         if display_type == DisplayType.STACK:
             raise Exception("Display type STACK is only available for wave display")
 
         elif display_type == DisplayType.MEAN:
-            display_data += np.mean(self.data(use_processor), axis = 0)
+            display_data += np.mean(self.to_data(use_processor), axis = 0)
         
         elif display_type == DisplayType.INDEX:
             if index is not None:
@@ -141,7 +141,7 @@ class MultiSpectrogram:
         #### Returns:
             - np.ndarray: stft at the requested index
         """
-        return self.data(use_processor)[2*index] + 1j * self.data(use_processor)[2*index + 1]
+        return self.to_data(use_processor)[2*index] + 1j * self.to_data(use_processor)[2*index + 1]
 
     def get_wave(self, index : int) -> np.ndarray:
         """#### Get the wave shape for the channel at the requested index
