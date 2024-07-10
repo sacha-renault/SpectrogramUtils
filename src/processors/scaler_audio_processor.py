@@ -8,7 +8,7 @@ from .abstract_data_processor import AbstractFitDataProcessor
 def reshape_to_transform(data : np.ndarray) -> np.ndarray:
     return np.expand_dims(data.flatten(), axis = 1)
 
-class TestAahah(AbstractFitDataProcessor):
+class ScalerAudioProcessor(AbstractFitDataProcessor):
     def __init__(self) -> None:
         self.ssc = StandardScaler()
         self.mms = MinMaxScaler(feature_range=(-1, 1))
