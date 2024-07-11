@@ -1,3 +1,5 @@
 __pycache__
 *.wav
 *.ipynb
+*.pkl
+obj
