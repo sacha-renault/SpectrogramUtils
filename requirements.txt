@@ -1,2 +1,5 @@
+numpy
 librosa
 soudfile
+matplotlib
+sklearn

@@ -1,7 +1,6 @@
 import librosa
 import numpy as np
 import numpy.typing as npt
-from numba import njit
 
 def get_square_stft_pairs_by_audio_length(audio_len: int) -> list:
     pairs = []
