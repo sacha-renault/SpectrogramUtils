@@ -5,6 +5,7 @@ class Config:
                  n_fft : int = None,
                  hop_length : int = None,
                  audio_length : int = None,
+                 power_to_db_intensity : float = None
                  ) -> None:
         # Assert some
         assert num_channel > 0
@@ -15,6 +16,8 @@ class Config:
             assert audio_length > 0
         if n_fft is not None:
             assert n_fft > 0
+        if power_to_db_intensity is not None:
+            assert power_to_db_intensity > 0
         
         # Set attribute
         self.n_fft = n_fft 
@@ -22,6 +25,7 @@ class Config:
         self.audio_length = audio_length
         self.num_channel = num_channel
         self.sample_rate = sample_rate
+        self.power_to_db_intensity = power_to_db_intensity
 
     def get_istft_kwargs(self) -> dict:
         kwargs = {}

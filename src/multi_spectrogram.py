@@ -118,7 +118,11 @@ class MultiSpectrogram:
         else:
             raise Exception(f"Cannot use display type {display_type.name} for image display")
 
-        axis.imshow(np.abs(display_data), *axes_args, **axes_kwargs)
+        if self.__conf.power_to_db_intensity is not None:
+            db_data = librosa.power_to_db(np.abs(display_data)**self.__conf.power_to_db_intensity)
+            axis.imshow(db_data, *axes_args, **axes_kwargs)
+        else:
+            axis.imshow(np.abs(display_data), *axes_args, **axes_kwargs)
 
     def show_wave_on_axis(self, 
                           axis : Axes, 
