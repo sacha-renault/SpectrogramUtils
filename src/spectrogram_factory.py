@@ -1,6 +1,7 @@
 from typing import Callable, Union
 
 import numpy as np
+import numpy.typing as npt
 import soundfile as sf
 import librosa
 
@@ -75,7 +76,7 @@ class SpectrogramFactory:
     def get_numpy_dataset(self, 
                           audio_or_file_list : Union[list[Union[str, np.ndarray]], list[MultiSpectrogram]], 
                           use_processor : bool
-                          ) -> np.ndarray:
+                          ) -> npt.NDArray[np.float64]:
         
         if self.__config.audio_length is None:
             raise Exception("Cannot create a numpy dataset with no audio length provided. \n" + \

@@ -1,5 +1,6 @@
 import librosa
 import numpy as np
+import numpy.typing as npt
 from numba import njit
 
 def get_square_stft_pairs_by_audio_length(audio_len: int) -> list:
@@ -66,7 +67,7 @@ def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> list[np.ndarray]:
     else:
         raise Exception("Unknown shape during stft process")
 
-def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
+def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float32]:
     audio_length = data.shape[1]
     if audio_length < desired_audio_length:
         padding_array = np.zeros((data.shape[0], desired_audio_length - audio_length))
@@ -74,7 +75,7 @@ def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
     else:
         return data[:,:desired_audio_length]
     
-def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
+def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float32]:
     audio_length = data.shape[1]
     if audio_length < desired_audio_length:
         padding_array = np.zeros((data.shape[0], desired_audio_length - audio_length))

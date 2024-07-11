@@ -3,10 +3,11 @@ import pickle
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import numpy as np
+import numpy.typing as npt
 
 from .abstract_data_processor import AbstractFitDataProcessor
 
-def reshape_to_transform(data : np.ndarray) -> np.ndarray:
+def reshape_to_transform(data : np.ndarray) -> npt.NDArray[np.float32]:
     return np.expand_dims(data.flatten(), axis = 1)
 
 class MeanStandardScaler(StandardScaler):
@@ -29,13 +30,13 @@ class ScalerAudioProcessor(AbstractFitDataProcessor):
         self.mms = MinMaxScaler(feature_range=feature_range)
         super().__init__()
 
-    def forward(self, data: np.ndarray) -> np.ndarray:
+    def forward(self, data: np.ndarray) -> npt.NDArray[np.float32]:
         shape = data.shape
         data = self.ssc.transform(reshape_to_transform(data)).reshape(shape)
         data = self.mms.transform(reshape_to_transform(data)).reshape(shape)
         return data
     
-    def backward(self, data: np.ndarray) -> np.ndarray:
+    def backward(self, data: np.ndarray) -> npt.NDArray[np.float32]:
         shape = data.shape
         data = self.mms.inverse_transform(reshape_to_transform(data)).reshape(shape)
         data = self.ssc.inverse_transform(reshape_to_transform(data)).reshape(shape)
