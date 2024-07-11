@@ -1,6 +1,7 @@
 from typing import Union
 
 import numpy as np
+import numpy.typing as npt
 import librosa
 import soundfile as sf
 from matplotlib.axes import Axes
@@ -35,7 +36,7 @@ class MultiSpectrogram:
         self.__data = data
 
     
-    def to_data(self, process_data : bool = False) -> np.ndarray:
+    def to_data(self, process_data : bool = False) -> npt.NDArray[np.float64]:
         """#### return a stereo spectrogram. Indexes precisions :
         - 2*n : amplitude of stft at index n
         - 2*n + 1 : phase of stft at index n
@@ -56,6 +57,7 @@ class MultiSpectrogram:
         
     
     def get_amplitudes(self) -> np.ndarray:
+        # TODO
         pass
         
     
@@ -75,7 +77,7 @@ class MultiSpectrogram:
                            index : Union[int, None] = None, 
                            use_processor : bool = False,
                            *axes_args, 
-                           **axes_kwargs):
+                           **axes_kwargs) -> None:
         """#### Show the stft on the given axis (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
 
         #### Args:
@@ -85,27 +87,36 @@ class MultiSpectrogram:
         # init new data
         display_data = np.zeros_like(self.to_data(use_processor)[0], dtype=np.complex128)
 
-        if display_type == DisplayType.STACK:
-            raise Exception("Display type STACK is only available for wave display")
-
-        elif display_type == DisplayType.MEAN:
-            data = np.mean(self.to_data(use_processor), axis = 0)
-            mean_real = np.mean(data[::2])
-            mean_imag = np.mean(data[1::2])
-            display_data += (data - mean_real - 1j * mean_imag)
+        if display_type == DisplayType.MEAN:
+            data = self.to_data(use_processor)
+            mean_real = data[::2] - np.mean(data[::2])
+            mean_imag = data[1::2] - np.mean(data[1::2])
+            display_data += np.mean(mean_real, axis = 0) + 1j * np.mean(mean_imag, axis = 0)
         
         elif display_type == DisplayType.INDEX:
             if index is not None:
                 index_data = self.get_stft(index, use_processor)
-                data = self.to_data(use_processor)
-                mean_real = np.mean(data[::2])
-                mean_imag = np.mean(data[1::2])
+                full_data = self.to_data(use_processor)
+                mean_real = np.mean(full_data[::2])
+                mean_imag = np.mean(full_data[1::2])
                 display_data += (index_data - mean_real - 1j * mean_imag)
             else:
                 raise Exception("Can't display index if no index is provided")
+            
+        elif display_type == DisplayType.MAX:
+            data = self.to_data(use_processor)
+            mean_real = data[::2] - np.mean(data[::2])
+            mean_imag = data[1::2] - np.mean(data[1::2])
+            display_data += np.max(mean_real, axis = 0) + 1j * np.max(mean_imag, axis = 0)
+
+        elif display_type == DisplayType.MIN:
+            data = self.to_data(use_processor)
+            mean_real = data[::2] - np.mean(data[::2])
+            mean_imag = data[1::2] - np.mean(data[1::2])
+            display_data += np.min(mean_real, axis = 0) + 1j * np.min(mean_imag, axis = 0)
         
         else:
-            raise Exception("Unknown display type")
+            raise Exception(f"Cannot use display type {display_type.name} for image display")
 
         axis.imshow(np.abs(display_data), *axes_args, **axes_kwargs)
 
@@ -114,7 +125,7 @@ class MultiSpectrogram:
                           display_type : DisplayType = DisplayType.STACK, 
                           index : Union[int, None] = None, 
                           *axes_args, 
-                          **axes_kwargs):
+                          **axes_kwargs) -> None:
         """#### Show the wave shape on a given axis 
 
         #### Args:
@@ -137,9 +148,9 @@ class MultiSpectrogram:
                 raise Exception("Can't display index if no index is provided")
 
         else:
-            raise Exception("Unknown display type")
+            raise Exception(f"Cannot use display type {display_type.name} for image display")
     
-    def get_stft(self, index : int, use_processor : bool = False) -> np.ndarray:
+    def get_stft(self, index : int, use_processor : bool = False) -> npt.NDArray[np.complex128]:
         """#### Get a stft at a specified index
 
         #### Args:
@@ -150,7 +161,7 @@ class MultiSpectrogram:
         """
         return self.to_data(use_processor)[2*index] + 1j * self.to_data(use_processor)[2*index + 1]
 
-    def get_wave(self, index : int) -> np.ndarray:
+    def get_wave(self, index : int) -> npt.NDArray[np.float64]:
         """#### Get the wave shape for the channel at the requested index
 
         #### Args:
@@ -163,7 +174,7 @@ class MultiSpectrogram:
         wave = librosa.istft(stft, **self.__conf.get_istft_kwargs())
         return wave
     
-    def get_waves(self) -> np.ndarray:
+    def get_waves(self) -> npt.NDArray[np.float64]:
         """#### Get the wave shape for all channels
 
         #### Returns:
