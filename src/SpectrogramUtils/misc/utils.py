@@ -83,3 +83,15 @@ def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.f
         return np.concatenate((padding_array, data), axis = 1)
     else:
         return data[:,desired_audio_length:]
+    
+def center_pad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+    audio_length = data.shape[1]
+    if audio_length < desired_audio_length:
+        l_pad_length = (desired_audio_length - audio_length) // 2
+        r_pad_length = l_pad_length + (desired_audio_length - audio_length) % 2
+        l_padding_array = np.zeros((data.shape[0], l_pad_length))
+        r_padding_array = np.zeros((data.shape[0], r_pad_length))
+        return np.concatenate((l_padding_array, data, r_padding_array), axis = 1)
+    else:
+        return data[:,:desired_audio_length]
+

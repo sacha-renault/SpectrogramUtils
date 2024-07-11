@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import Callable
 
-from ..misc.utils import lpad_lcut, rpad_rcut
+from ..misc.utils import lpad_lcut, rpad_rcut, center_pad_rcut
 
 class DisplayType(Enum):
     # # # # # # #
@@ -40,7 +40,7 @@ class AudioPadding:
         Cut the start of the audio if too long 
     """
 
-    CENTER_RCUT = None
+    CENTER_RCUT = center_pad_rcut
     """
         Add zeros in the left and right to center the audio if too small.
         Cut the end of the audio if too long. 
