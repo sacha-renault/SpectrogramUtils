@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from functools import wraps
+from typing import Union
 
 import numpy as np
 
@@ -32,7 +32,30 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         self.__is_fitted = value
     
     @abstractmethod
+    def load(self, file : Union[str, list[str]]) -> None:
+        """#### Restaure the processor to a saved states, it should set is_fitted to True. 
+
+        #### Args:
+            - file (Union[str, list[str]]): file or files to restaure a processor states. 
+        """
+        ...
+
+    @abstractmethod
     def fit(self, fit_data : np.ndarray) -> None:
+        """#### Fit the processor to training datas. It should set is_fitted to True
+
+        #### Args:
+            - fit_data (np.ndarray): training data
+        """
+        ...
+
+    @abstractmethod
+    def save(self, file : Union[str, list[str]]) -> None:
+        """#### Load the current state of the processor into a file
+
+        #### Args:
+            - file (Union[str, list[str]]): file or files to save a processor states. 
+        """
         ...
 
     def f_backward(self, data : np.ndarray) -> np.ndarray:
