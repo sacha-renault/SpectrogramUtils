@@ -10,6 +10,15 @@ class AbstractDataProcessor(ABC):
 
     @abstractmethod
     def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+        """#### Preprocess datas, transformation must be reversible to get back to initial state in backward
+        (i.e. self.backward(self.forward(data)) must be same as data)
+
+        #### Args:
+            - data (np.ndarray): single data
+
+        #### Returns:
+            - npt.NDArray[np.float64]: processed data
+        """
         ...
 
     def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
@@ -17,6 +26,14 @@ class AbstractDataProcessor(ABC):
 
     @abstractmethod
     def backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+        """#### Get back to inital state
+
+        #### Args:
+            - data (np.ndarray): single processed data
+
+        #### Returns:
+            - npt.NDArray[np.float64]: deprocessed data
+        """
         ...
 
 
@@ -52,7 +69,7 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
 
     @abstractmethod
     def save(self, file : Union[str, list[str]]) -> None:
-        """#### Load the current state of the processor into a file
+        """#### Save the current state of the processor into a file
 
         #### Args:
             - file (Union[str, list[str]]): file or files to save a processor states. 
