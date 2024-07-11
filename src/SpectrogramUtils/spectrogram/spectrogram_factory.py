@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, List
 
 import numpy as np
 import numpy.typing as npt
@@ -64,7 +64,7 @@ class SpectrogramFactory:
         # return the spectro
         return self.get_spectrogram_from_audio(audio.transpose())
     
-    def get_spectrograms_from_files(self, audio_or_file_list : list[Union[str, np.ndarray]]) -> list[MultiSpectrogram]:
+    def get_spectrograms_from_files(self, audio_or_file_list : List[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
         spectros : list[MultiSpectrogram] = []
         for audio_or_file in audio_or_file_list:
             if isinstance(audio_or_file, str):
@@ -77,7 +77,7 @@ class SpectrogramFactory:
                 raise Exception(f"Couldn't handle type : {type(audio_or_file)}")
         return spectros
     
-    def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64]) -> list[MultiSpectrogram]:
+    def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64]) -> List[MultiSpectrogram]:
         """#### From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
         /!\\ the model output should be shaped like (batch, channel, h, w)
 
@@ -105,7 +105,7 @@ class SpectrogramFactory:
         return spectros
     
     def get_numpy_dataset(self, 
-                          audio_or_file_list : Union[list[Union[str, np.ndarray]], list[MultiSpectrogram]], 
+                          audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]], 
                           use_processor : bool
                           ) -> npt.NDArray[np.float64]:
         

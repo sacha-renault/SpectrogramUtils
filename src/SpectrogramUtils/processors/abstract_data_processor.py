@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 import numpy as np
 import numpy.typing as npt
@@ -50,7 +50,7 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         self.__is_fitted = value
     
     @abstractmethod
-    def load(self, file : Union[str, list[str]]) -> None:
+    def load(self, file : Union[str, List[str]]) -> None:
         """#### Restaure the processor to a saved states, it should set is_fitted to True. 
 
         #### Args:
@@ -68,7 +68,7 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         ...
 
     @abstractmethod
-    def save(self, file : Union[str, list[str]]) -> None:
+    def save(self, file : Union[str, List[str]]) -> None:
         """#### Save the current state of the processor into a file
 
         #### Args:

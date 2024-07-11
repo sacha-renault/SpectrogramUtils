@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 import librosa
 import numpy as np
 import numpy.typing as npt
@@ -27,7 +29,7 @@ def get_square_stft_pairs_by_audio_length(audio_len: int) -> list:
     
     return pairs
 
-def get_values_for_stft_shape(desired_stft_shape: tuple[int, int]) -> list:
+def get_values_for_stft_shape(desired_stft_shape: Tuple[int, int]) -> list:
     desired_num_freq_bins, desired_num_time_bins = desired_stft_shape
     
     # Calculate the required nfft to achieve the desired number of frequency bins
@@ -51,7 +53,7 @@ def get_values_for_stft_shape(desired_stft_shape: tuple[int, int]) -> list:
     
     return possible_values
 
-def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> list[np.ndarray]:
+def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> List[np.ndarray]:
     # Ensure the input array is at most 2D
     assert len(audio_array.shape) <= 2
 
