@@ -1,22 +1,22 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 import numpy.typing as npt
 
 class AbstractDataProcessor(ABC):
-    def f_forward(self, data : np.ndarray) -> npt.NDArray[np.float32]:
+    def f_forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         return self.forward(data)
 
     @abstractmethod
-    def forward(self, data : np.ndarray) -> npt.NDArray[np.float32]:
+    def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         ...
 
-    def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float32]:
+    def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         return self.backward(data)
 
     @abstractmethod
-    def backward(self, data : np.ndarray) -> npt.NDArray[np.float32]:
+    def backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         ...
 
 
@@ -59,11 +59,11 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         """
         ...
 
-    def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float32]:
+    def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         assert self.is_fitted, "Cannot use transformation before fitting the processor"
         return self.backward(data)
     
-    def f_forward(self, data : np.ndarray) -> npt.NDArray[np.float32]:
+    def f_forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         assert self.is_fitted, "Cannot use transformation before fitting the processor"
         return self.forward(data)
 
