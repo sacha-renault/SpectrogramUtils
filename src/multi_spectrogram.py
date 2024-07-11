@@ -6,13 +6,13 @@ import librosa
 import soundfile as sf
 from matplotlib.axes import Axes
 
-from .data import DisplayType
+from .data import DisplayType, ListOrdering
 from .config import Config
 from .processors.abstract_data_processor import AbstractDataProcessor
 
 class MultiSpectrogram:
     @classmethod
-    def from_stfts(cls, config : Config, processor : AbstractDataProcessor = None, *stfts : np.ndarray):
+    def from_stfts(cls, config : Config, processor : AbstractDataProcessor = None, ordering : ListOrdering = None, *stfts : np.ndarray):
         # assert same shape
         assert all(stft.shape == stfts[0].shape for stft in stfts), "All stfts shape should be the same"
 
@@ -23,17 +23,25 @@ class MultiSpectrogram:
             data[2*i + 1] = stft.imag
         
         # Instanciate the class with the multi spectro 
-        return cls(config, processor, data)
+        return cls(config, processor, ordering, data)
 
-    def __init__(self, config : Config, processor : AbstractDataProcessor, data : np.ndarray) -> None:
+    def __init__(self, config : Config, processor : AbstractDataProcessor,  ordering : ListOrdering, data : np.ndarray) -> None:
         # define config
+        assert isinstance(config, Config), f"config must be a Config object, not {type(config)}"
         self.__conf = config
 
         # Set processor
+        assert isinstance(processor, AbstractDataProcessor), f"processor must heritate from AbstractDataProcessor, found type : {type(processor)}"
         self.__processor = processor 
 
         # define data
+        assert isinstance(data, np.ndarray), f"data must be a NDArray object, not {type(data)}"
+        assert data.dtype == np.float64, f"data type must be float64, not {data.dtype}"
         self.__data = data
+
+        # Define ordering
+        assert isinstance(ordering, ListOrdering), f"ordering must be a ListOrdering object, not {type(data)}"
+        self.__ordering = ordering
 
     
     def to_data(self, process_data : bool = False) -> npt.NDArray[np.float64]:
@@ -49,17 +57,28 @@ class MultiSpectrogram:
         """
         if process_data:
             if self.__processor is not None:
-                return self.__processor.f_forward(self.__data)
+                data = self.__processor.f_forward(self.__data)
             else:
                 raise Exception("Askep processed data without providing a processor")
         else:
-            return self.__data
+            data = self.__data
+        return data
+    
+    def to_rearanged_data(self, process_data : bool = False):
+        data = self.to_data(process_data)
+        if self.__ordering == ListOrdering.AMPLITUDE_PHASE:
+            data = np.concatenate((data[::2], data[1::2]), axis = 0) # Rearange the order of the amplitudes and phases
+        return data
         
     
     def get_amplitudes(self) -> np.ndarray:
         # TODO
         pass
         
+    @property
+    def ordering(self) -> ListOrdering:
+        return self.__ordering
+    
     
     @property
     def num_stfts(self) -> int:
@@ -121,8 +140,12 @@ class MultiSpectrogram:
         if self.__conf.power_to_db_intensity is not None:
             db_data = librosa.power_to_db(np.abs(display_data)**self.__conf.power_to_db_intensity)
             axis.imshow(db_data, *axes_args, **axes_kwargs)
+            axis.set_xlabel('Time')
+            axis.set_ylabel('Frequency')
         else:
             axis.imshow(np.abs(display_data), *axes_args, **axes_kwargs)
+            axis.set_xlabel('Time')
+            axis.set_ylabel('Frequency')
 
     def show_wave_on_axis(self, 
                           axis : Axes, 
@@ -136,6 +159,8 @@ class MultiSpectrogram:
             - axis (axes.Axes): Axis to display the stereo spectrogram
             - display_type (DisplayType, optional): How to display the wave. Defaults to DisplayType.STACK.
         """
+        axis.set_xlabel('Time')
+        axis.set_ylabel('Amplitude')
         if display_type == DisplayType.STACK:
             axis.plot(self.get_waves().transpose(), *axes_args, **axes_kwargs)            
 

@@ -45,3 +45,15 @@ class AudioPadding:
         Add zeros in the left and right to center the audio if too small.
         Cut the end of the audio if too long. 
     """
+
+class ListOrdering(Enum):
+    ALTERNATE = auto()
+    """
+        Altenate bewteen amplitude and phase. 
+        Any 2*n is an amplitude and 2*n + 1 is a phase
+    """
+
+    AMPLITUDE_PHASE = auto()
+    """
+        First half is all the amplitudes, and second hald is all phases
+    """
