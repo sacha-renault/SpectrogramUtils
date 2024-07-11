@@ -76,7 +76,7 @@ class MultiSpectrogram:
                            use_processor : bool = False,
                            *axes_args, 
                            **axes_kwargs):
-        """#### Show the stft on the given axis 
+        """#### Show the stft on the given axis (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
 
         #### Args:
             - axis (axes.Axes): Axis to display the stereo spectrogram
@@ -89,11 +89,18 @@ class MultiSpectrogram:
             raise Exception("Display type STACK is only available for wave display")
 
         elif display_type == DisplayType.MEAN:
-            display_data += np.mean(self.to_data(use_processor), axis = 0)
+            data = np.mean(self.to_data(use_processor), axis = 0)
+            mean_real = np.mean(data[::2])
+            mean_imag = np.mean(data[1::2])
+            display_data += (data - mean_real - 1j * mean_imag)
         
         elif display_type == DisplayType.INDEX:
             if index is not None:
-                display_data += self.get_stft(index, use_processor)
+                index_data = self.get_stft(index, use_processor)
+                data = self.to_data(use_processor)
+                mean_real = np.mean(data[::2])
+                mean_imag = np.mean(data[1::2])
+                display_data += (index_data - mean_real - 1j * mean_imag)
             else:
                 raise Exception("Can't display index if no index is provided")
         
