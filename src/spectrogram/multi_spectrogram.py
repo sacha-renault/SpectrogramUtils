@@ -6,9 +6,9 @@ import librosa
 import soundfile as sf
 from matplotlib.axes import Axes
 
-from .data import DisplayType, ListOrdering
-from .config import Config
-from .processors.abstract_data_processor import AbstractDataProcessor
+from ..data.data import DisplayType, ListOrdering
+from ..data.config import Config
+from ..processors.abstract_data_processor import AbstractDataProcessor
 
 class MultiSpectrogram:
     @classmethod

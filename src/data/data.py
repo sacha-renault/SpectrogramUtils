@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import Callable
 
-from .utils import lpad_lcut, rpad_rcut
+from ..misc.utils import lpad_lcut, rpad_rcut
 
 class DisplayType(Enum):
     # # # # # # #

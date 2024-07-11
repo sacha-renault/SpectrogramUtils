@@ -5,11 +5,11 @@ import numpy.typing as npt
 import soundfile as sf
 import librosa
 
-from .config import Config
-from .processors.abstract_data_processor import AbstractDataProcessor
+from ..data.config import Config
+from ..processors.abstract_data_processor import AbstractDataProcessor
 from .multi_spectrogram import MultiSpectrogram
-from .data import AudioPadding, ListOrdering
-from .utils import get_multi_stft
+from ..data.data import AudioPadding, ListOrdering
+from ..misc.utils import get_multi_stft
 
 class SpectrogramFactory:
     def __init__(self, 
