@@ -4,17 +4,25 @@ from typing import Callable
 from .utils import lpad_lcut, rpad_rcut
 
 class DisplayType(Enum):
-    # Display the average bewteen left and right spectrogram
+    # # # # # # #
     MEAN = auto()
     """Display the average bewteen left and right spectrogram"""
 
-    # Only available for wave display
+    # # # # # # #
     STACK = auto()
     """Only available for wave display. \nDisplay all the waves in one graph."""
 
-    # Display the stft at specified index
+    # 
     INDEX = auto()
     """Display the stft at specified index"""
+
+    # # # # # # #
+    MAX = auto()
+    """Display maximum value if more than one provided"""
+
+    # # # # # # # 
+    MIN = auto()
+    """Display minimum value if more than one provided"""
 
 class AudioPadding:
     NONE = None
