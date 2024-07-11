@@ -1,5 +1,7 @@
 # SpectrogramsUtils
 
+***################ Work in progress #################***
+
 ## I - Goals
 - Open audio as spectrograms using a factory
 - Preprocess datas
@@ -32,7 +34,7 @@ files = [
     os.path.join(audio_directory, audio_file) 
     for audio_file in os.listdir(audio_directory)
 ]
-factory.get_spectrograms(files)
+spectrograms = factory.get_spectrograms(files)
 ```
 
 ### b) Basic usage : display spectrograms
@@ -47,12 +49,14 @@ spectrogram = factory.get_spectrogram_from_path("path/to/file.wav")
 # Create axes
 _, axs = plt.subplots(3, 1)
 
-# Use config  field power_to_db_intensity to set the intensity of power_to_db
-# By default, is config.power_to_db_intensity is None, it will display the spectrogram as amplitude, not as db
+# Use config  field power_to_db_intensity to set the intensity of power_to_db, 
+# and display the spectrogram as dB
+# By default, is config.power_to_db_intensity is None and
+# it will display the spectrogram as amplitude, not as dB
 config.power_to_db_intensity = 2 # 2 is equivalent to amplitude_to_db, but user can set any value
 
 # Display each channel and the mean in axes
-spectrogram.show_image_on_axis(axs[0], DisplayType.INDEX, index = 0)
-spectrogram.show_image_on_axis(axs[0], DisplayType.INDEX, index = 1)
-spectrogram.show_image_on_axis(axs[0], DisplayType.MEAN)
+spectrogram.show_image_on_axis(axs[0], DisplayType.INDEX, index = 0) # Need to provide an index when display type is INDEX
+spectrogram.show_image_on_axis(axs[1], DisplayType.INDEX, index = 1) # Need to provide an index when display type is INDEX
+spectrogram.show_image_on_axis(axs[2], DisplayType.MEAN) # No need to provide an index when display type is not INDEX
 ```
