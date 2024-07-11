@@ -3,3 +3,7 @@ __pycache__
 *.ipynb
 *.pkl
 obj
+dist
+build
+*egg-info
+env
