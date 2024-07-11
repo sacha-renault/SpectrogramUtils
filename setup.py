@@ -3,12 +3,15 @@ from setuptools import setup, find_packages
 if __name__ == "__main__":
     setup(
         name='SpectrogramUtils',
-        version='0.1',
+        use_scm_version=True,
         package_dir={'': 'src'},
         packages=find_packages(where='src'),
         install_requires=[
-            # List your project's dependencies here
-            # e.g., 'requests', 'numpy',
+            "numpy",
+            "librosa",
+            "soundfile",
+            "matplotlib",
+            "scikit-learn"
         ],
         author='Sacha Renault',
         author_email='',

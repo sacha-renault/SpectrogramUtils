@@ -1,5 +1,5 @@
 numpy
 librosa
-soudfile
+soundfile
 matplotlib
-sklearn
+scikit-learn
