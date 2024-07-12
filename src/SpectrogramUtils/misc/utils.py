@@ -4,6 +4,8 @@ import librosa
 import numpy as np
 import numpy.typing as npt
 
+from ..exceptions.lib_exceptions import UnknownStftShapeException
+
 def get_square_stft_pairs_by_audio_length(audio_len: int) -> list:
     pairs = []
     
@@ -66,7 +68,7 @@ def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> List[np.ndarray]:
     elif len(result.shape) == 3:
         return [r for r in result]
     else:
-        raise Exception("Unknown shape during stft process")
+        raise UnknownStftShapeException("Unknown shape during stft process")
 
 def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
     audio_length = data.shape[1]

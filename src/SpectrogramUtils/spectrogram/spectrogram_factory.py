@@ -10,6 +10,7 @@ from ..processors.abstract_data_processor import AbstractDataProcessor
 from .multi_spectrogram import MultiSpectrogram
 from ..data.data import AudioPadding, ListOrdering
 from ..misc.utils import get_multi_stft
+from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
 
 class SpectrogramFactory:
     def __init__(self, 
@@ -32,7 +33,7 @@ class SpectrogramFactory:
 
         # Check if config is correct
         if self.__audio_padder is not None and self.__config.audio_length is None:
-            raise Exception("Audio Padder can't be userd without a audio_length configured in the config object.")
+            raise WrongConfigurationException("Audio Padder can't be userd without a audio_length configured in the config object.")
 
     def get_spectrogram_from_audio(self, audio_array : np.ndarray) -> MultiSpectrogram:
         # Get the channel number
@@ -52,7 +53,7 @@ class SpectrogramFactory:
             return MultiSpectrogram.from_stfts(self.__config, self.__processor, self.__ordering, *stfts)
         
         else:
-            raise Exception(f"Cannot handle data with {num_channels} channels")
+            raise WrongConfigurationException(f"Cannot handle data with {num_channels} channels. Configuration is set for {self.__config.num_channel} channels.")
         
     def get_spectrogram_from_path(self, file_path : str) -> MultiSpectrogram:
         # Load the audio
@@ -74,7 +75,7 @@ class SpectrogramFactory:
                 spectros.append(
                     self.get_spectrogram_from_audio(audio_or_file))
             else:
-                raise Exception(f"Couldn't handle type : {type(audio_or_file)}")
+                raise BadTypeException(f"Couldn't handle type : {type(audio_or_file)}. Can only get file_path as str and audio_file as NDArray")
         return spectros
     
     def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64]) -> List[MultiSpectrogram]:
@@ -110,10 +111,10 @@ class SpectrogramFactory:
                           ) -> npt.NDArray[np.float64]:
         
         if self.__config.audio_length is None:
-            raise Exception("Cannot create a numpy dataset with no audio length provided. \n" + \
+            raise WrongConfigurationException("Cannot create a numpy dataset with no audio length provided. \n" + \
                             "Set the audio_length field in the configuration.")
         if self.__audio_padder is None:
-            raise Exception("Cannot create a numpy dataset with no audio padding function provided. \n" + \
+            raise WrongConfigurationException("Cannot create a numpy dataset with no audio padding function provided. \n" + \
                             "Set audio_padder argument in the factory constructor.")
 
         spectros = self.get_spectrograms_from_files(audio_or_file_list)

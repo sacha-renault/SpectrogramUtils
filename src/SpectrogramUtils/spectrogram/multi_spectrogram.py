@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from ..data.data import DisplayType, ListOrdering
 from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
+from ..exceptions.lib_exceptions import NoProcessorException, NoIndexException, WrongDisplayTypeException, UnknownWavTypeException
 
 class MultiSpectrogram:
     @classmethod
@@ -59,7 +60,7 @@ class MultiSpectrogram:
             if self.__processor is not None:
                 data = self.__processor.f_forward(self.__data)
             else:
-                raise Exception("Askep processed data without providing a processor")
+                raise NoProcessorException("Askep processed data without providing a processor")
         else:
             data = self.__data
         return data
@@ -120,7 +121,7 @@ class MultiSpectrogram:
                 mean_imag = np.mean(full_data[1::2])
                 display_data += (index_data - mean_real - 1j * mean_imag)
             else:
-                raise Exception("Can't display index if no index is provided")
+                raise NoIndexException("Can't display index if no index is provided")
             
         elif display_type == DisplayType.MAX:
             data = self.to_data(use_processor)
@@ -135,7 +136,7 @@ class MultiSpectrogram:
             display_data += np.min(mean_real, axis = 0) + 1j * np.min(mean_imag, axis = 0)
         
         else:
-            raise Exception(f"Cannot use display type {display_type.name} for image display")
+            raise WrongDisplayTypeException(f"Cannot use display type {display_type.name} for image display")
 
         if self.__conf.power_to_db_intensity is not None:
             db_data = librosa.power_to_db(np.abs(display_data)**self.__conf.power_to_db_intensity)
@@ -174,10 +175,10 @@ class MultiSpectrogram:
                 wave = self.get_wave(index)
                 axis.plot(wave, *axes_args, **axes_kwargs)
             else:
-                raise Exception("Can't display index if no index is provided")
+                raise NoIndexException("Can't display index if no index is provided")
 
         else:
-            raise Exception(f"Cannot use display type {display_type.name} for image display")
+            raise WrongDisplayTypeException(f"Cannot use display type {display_type.name} for image display")
     
     def get_stft(self, index : int, use_processor : bool = False) -> npt.NDArray[np.complex128]:
         """#### Get a stft at a specified index
@@ -223,4 +224,4 @@ class MultiSpectrogram:
         if self.num_stfts <=2:
             sf.write(file_name, self.get_waves().transpose(), samplerate=self.__conf.sample_rate)
         else:
-            raise Exception("Cannot save audio if it isn't mono or stereo")
+            raise UnknownWavTypeException("Cannot save audio if it isn't mono or stereo")

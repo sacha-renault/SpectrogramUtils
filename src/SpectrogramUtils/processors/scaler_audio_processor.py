@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from .abstract_data_processor import AbstractFitDataProcessor
+from ..exceptions.lib_exceptions import UnknownProcessorSaveFileDataException
 
 def reshape_to_transform(data : np.ndarray) -> npt.NDArray[np.float64]:
     return np.expand_dims(data.flatten(), axis = 1)
@@ -73,4 +74,4 @@ class ScalerAudioProcessor(AbstractFitDataProcessor):
             self.mms = data['mms']
             self.is_fitted = True
         else:
-            raise Exception("Couldn't find datas for teh file")
+            raise UnknownProcessorSaveFileDataException("Couldn't find datas for saved file")
