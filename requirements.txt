@@ -1,5 +1,9 @@
+# Distribution
 setuptools_scm
 wheel
+twine
+
+# Usage
 numpy
 librosa
 soundfile
