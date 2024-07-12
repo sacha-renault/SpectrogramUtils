@@ -74,10 +74,12 @@ class MultiSpectrogram:
     
     def get_amplitudes(self) -> np.ndarray:
         # TODO
-        pass
+        raise NotImplementedError()
         
     @property
     def ordering(self) -> ListOrdering:
+        """#### Return the list ordering set for this spectrogram
+        """
         return self.__ordering
     
     
@@ -89,6 +91,8 @@ class MultiSpectrogram:
     
     @property
     def shape(self):
+        """#### return the shape of the spectrogram
+        """
         return self.__data.shape
     
     def show_image_on_axis(self, 
@@ -103,6 +107,10 @@ class MultiSpectrogram:
         #### Args:
             - axis (axes.Axes): Axis to display the stereo spectrogram
             - display_type (DisplayType, optional): How to display the stereo spectrogram. Defaults to DisplayType.MEAN.
+            
+        #### Raises:
+            - NoIndexException: DisplayType is INDEX but no index provided
+            - WrongDisplayTypeException: this DisplayType isn't handled for this method
         """
         # init new data
         display_data = np.zeros_like(self.to_data(use_processor)[0], dtype=np.complex128)
@@ -159,6 +167,10 @@ class MultiSpectrogram:
         #### Args:
             - axis (axes.Axes): Axis to display the stereo spectrogram
             - display_type (DisplayType, optional): How to display the wave. Defaults to DisplayType.STACK.
+
+        #### Raises:
+            - NoIndexException: DisplayType is INDEX but no index provided
+            - WrongDisplayTypeException: this DisplayType isn't handled for this method
         """
         axis.set_xlabel('Time')
         axis.set_ylabel('Amplitude')
@@ -219,6 +231,15 @@ class MultiSpectrogram:
         return waves
     
     def save_as_file(self, file_name : str) -> None:
+        """#### save the file as wav
+
+        #### Args:
+            - file_name (str): file name
+
+        #### Raises:
+            - UnknownWavTypeException: Cannot save as wav file that has more than 2 channels. please call method 
+            get_waves and setup a custom save function.
+        """
         if not file_name.endswith(".wav"):
             file_name += ".wav"
         if self.num_stfts <=2:
