@@ -2,14 +2,20 @@
 
 ***################ Work in progress #################***
 
-## I - Goals
-- Open audio as spectrograms using a factory
-- Preprocess datas
-- Having a simple flow from complexe arrays in stft to float 64 arrays
-- Get back datas from a DL model directly as audio
-- This library first purpose is not made to make dataset for classfiers, but for generative AI.
+SpectrogramUtils is a library designed for handling and processing audio spectrograms. It provides tools to open audio files as spectrograms, preprocess data, and easily integrate with deep learning models, especially for generative AI tasks.
 
-## II - Usage
+
+## I - Goal and main purpose.
+- Open audio files as spectrograms using a factory pattern.
+- Preprocess data efficiently.
+- Provide a simple flow from complex arrays in STFT to float64 arrays.
+- Retrieve data from a deep learning model directly as audio.
+- Primarily designed for generative AI tasks, not for creating datasets for classifiers.
+
+## II - Installation
+*WIP* ! Maybe i'll set up a pip package, right now, just go on a tag and follow install.md
+
+## III - Usage
 
 ### a) Basic usage : loading files
 ```python
@@ -211,4 +217,15 @@ for i, spectrogram in enumerate(output_spectrograms):
     spectrogram.show_wave_on_axis(axs[i][1], DisplayType.INDEX, index = i)
 for i, spectrogram in enumerate(output_spectrograms):
     spectrogram.save_as_file(f"output/<model_name>_{i+1}.wav")
+```
+
+### f) Basic usage : list ordering
+There is now 2 ListOrdering possible that you can set in SpectrogramFactory. It allows to change the order amplitude and phase. When the datas are passed from a list of complexe 2D array to a float 3D array, it set the amplitude every 2\*n, and phase every 2\*n + 1. For a 3 channel audio, we would have [A1, P1, A2, P2, A3, P3] (An and Pn being Amplitude and Phase of channel n).
+- ListOrdering.ALTERNATE (default) : this is the default ordering, it let the normal order : [A1, P1, ..., An, Pn].
+- ListOrdering.AMPLITUDE_PHASE : when calling get_numpy_dataset, it change the order to : [A1, ..., An, P1, ..., Pn]. It rearange to normal order when calling get_spectrogram_from_model_output. (Spectrogram always store as ALTERNATE order, ListOrdering just allows to have the desired order in the dataset)
+
+```python
+from SpectrogramUtils import ListOrdering
+
+factory = SpectrogramFactory(config, processor, data.AudioPadding.RPAD_RCUT, ListOrdering.AMPLITUDE_PHASE)
 ```
