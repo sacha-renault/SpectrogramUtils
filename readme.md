@@ -1,11 +1,11 @@
-# SpectrogramsUtils
+# SpectrogramUtils
 
-***################ Work in progress #################***
+**_################ Work in progress #################_**
 
 SpectrogramUtils is a library designed for handling and processing audio spectrograms. It provides tools to open audio files as spectrograms, preprocess data, and easily integrate with deep learning models, especially for generative AI tasks.
 
-
 ## I - Goal and main purpose.
+
 - Open audio files as spectrograms using a factory pattern.
 - Preprocess data efficiently.
 - Provide a simple flow from complex arrays in STFT to float64 arrays.
@@ -13,24 +13,28 @@ SpectrogramUtils is a library designed for handling and processing audio spectro
 - Primarily designed for generative AI tasks, not for creating datasets for classifiers.
 
 ## II - Installation
-*WIP* ! Maybe i'll set up a pip package, right now, just go on a tag and follow install.md
+
+```sh
+pip install SpectrogramUtils
+```
 
 ## III - Usage
 
-### a) Basic usage : loading files
+### a - Basic usage : loading files
+
 ```python
 # Imports
-import os 
+import os
 
-from SpectrogramsUtils import SpectrogramFactory
-from SpectrogramsUtils import Config
-from SpectrogramsUtils import AudioPadding
+from SpectrogramUtils import SpectrogramFactory
+from SpectrogramUtils import Config
+from SpectrogramUtils import AudioPadding
 
 # Create a config
 config = Config(2, n_fft = 512, audio_length = 44_100*5)
 
 # Factory with no audio processor
-factory = SpectrogramFactory(config, audio_padder = AudioPadding.RPAD_RCUT) 
+factory = SpectrogramFactory(config, audio_padder = AudioPadding.RPAD_RCUT)
 
 # Load a single audio file
 spectrogram = factory.get_spectrogram_from_path("path/to/file.wav")
@@ -38,17 +42,18 @@ spectrogram = factory.get_spectrogram_from_path("path/to/file.wav")
 # Load one spectrogram for each audio in a folder
 audio_directory = "path/to/directory"
 files = [
-    os.path.join(audio_directory, audio_file) 
+    os.path.join(audio_directory, audio_file)
     for audio_file in os.listdir(audio_directory)
 ]
-spectrograms = factory.get_spectrograms(files)
+spectrograms = factory.get_spectrograms_from_files(files)
 ```
 
-### b) Basic usage : display spectrograms
+### b - Basic usage : display spectrograms
+
 ```python
 # Imports
 import matplotlib.pyplot as plt
-from SpectrogramsUtils import DisplayType
+from SpectrogramUtils import DisplayType
 
 # Load a single audio file with 2 channels (i.e. stereo audio)
 spectrogram = factory.get_spectrogram_from_path("path/to/file.wav")
@@ -56,7 +61,7 @@ spectrogram = factory.get_spectrogram_from_path("path/to/file.wav")
 # Create axes
 _, axs = plt.subplots(3, 1)
 
-# Use config  field power_to_db_intensity to set the intensity of power_to_db, 
+# Use config  field power_to_db_intensity to set the intensity of power_to_db,
 # and display the spectrogram as dB
 # By default, is config.power_to_db_intensity is None and
 # it will display the spectrogram as amplitude, not as dB
@@ -69,8 +74,10 @@ spectrogram.show_image_on_axis(axs[2], DisplayType.MEAN) # No need to provide an
 plt.show()
 ```
 
-### c) Basic usage : data processor
+### c - Basic usage : data processor
+
 #### Usage
+
 ```python
 # There is two kind of data processor
 # 1 - Normal data processor : doesn't need to be fitted
@@ -79,7 +86,7 @@ plt.show()
 # Example using the ScalerAudioProcessor
 
 # Imports
-from SpectrogramsUtils.processors import ScalerAudioProcessor
+from SpectrogramUtils.processors import ScalerAudioProcessor
 
 # Init processor
 processor = ScalerAudioProcessor(0.5, (0, 1)) # Target mean and min max
@@ -88,19 +95,19 @@ processor = ScalerAudioProcessor(0.5, (0, 1)) # Target mean and min max
 ...
 
 # Create factory
-factory = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.RPAD_RCUT) 
+factory = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.RPAD_RCUT)
 
 # Make a dataset of unprocessed datas
-unprocessed_data = get_numpy_dataset(files, use_processor = False)
+unprocessed_data = factory.get_numpy_dataset(files, use_processor = False)
 
 # Fit the processor
 processor.fit(unprocessed_data)
 
-# Now you can use processor any where : 
-# In display 
+# Now you can use processor any where :
+# In display
 spectrogram.show_image_on_axis(axs[0], DisplayType.INDEX, index = 0, use_processor = True)
 # In dataset
-processed_data = get_numpy_dataset(files, use_processor = True)
+processed_data = factory.get_numpy_dataset(files, use_processor = True)
 
 # Any fit processor that is used before calling fit will raise an error
 # Normal processor processor doesn't need to be fit
@@ -108,8 +115,11 @@ processor.save("processor.pkl") # save to skip the fit phase next time
 ```
 
 #### Create
+
 Data processor must inheritate from either AbstractFitDataProcessor or AbstractDataProcessor
+
 - AbstractDataProcessor processors must implement
+
 ```python
 class YourDataProcessor(AbstractDataProcessor):
     def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
@@ -136,7 +146,8 @@ class YourDataProcessor(AbstractDataProcessor):
         # TODO
 ```
 
-- AbstractFitDataProcessor must implement
+- AbstractFitDataProcessor must also implement
+
 ```python
 class YourFitDataProcessor(AbstractFitDataProcessor):
     def fit(self, fit_data : np.ndarray) -> None:
@@ -153,32 +164,36 @@ class YourFitDataProcessor(AbstractFitDataProcessor):
         """#### Save the current state of the processor into a file
 
         #### Args:
-            - file (Union[str, list[str]]): file or files to save a processor states. 
+            - file (Union[str, list[str]]): file or files to save a processor states.
         """
         # TODO
 
     def load(self, file : Union[str, list[str]]) -> None:
-        """#### Restaure the processor to a saved states, it should set is_fitted to True. 
+        """#### Restaure the processor to a saved states, it should set is_fitted to True.
 
         #### Args:
-            - file (Union[str, list[str]]): file or files to restaure a processor states. 
+            - file (Union[str, list[str]]): file or files to restaure a processor states.
         """
         # TODO
 ```
 
-### d) Basic usage : use padding
+### d - Basic usage : use padding
+
 #### Usage
+
 Basic padding function already exist, it's simple to set them up in the factory
+
 ```python
 # Imports
-from SpectrogramsUtils import AudioPadding
+from SpectrogramUtils import AudioPadding
 
 # Create factory
-factory1 = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.RPAD_RCUT) 
-factory1 = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.LPAD_LCUT) 
+factory1 = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.RPAD_RCUT)
+factory1 = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.LPAD_LCUT)
 ```
 
 You can create your own padding function
+
 ```python
 def my_padding_function(audio_array : npt.NDArray, audio_length : int) -> npt.NDArray:
     # TODO
@@ -186,10 +201,11 @@ def my_padding_function(audio_array : npt.NDArray, audio_length : int) -> npt.ND
     # CUT the audio if it's too long
 ```
 
-### e) Basic usage : retrieve data from a DL model
+### e - Basic usage : retrieve data from a DL model
+
 ```python
-# Build a dataset and train a deep learning model. 
-# We are more talking about generative AI, we don't need to retreive any data from a classifier. 
+# Build a dataset and train a deep learning model.
+# We are more talking about generative AI, we don't need to retreive any data from a classifier.
 # In this example, we train a model to denoize some audio
 noized_data = ... # load files
 X_data = factory.get_numpy_dataset(noized_data) # Make your own dataset
@@ -202,30 +218,31 @@ model = ...
 model.fit(X_data_train, y_data_train, validation_data = (X_data_validation, y_data_validation)) # Example of fitting
 
 # Let your model produce some outputs
-outputs = model(X_data_test) 
+outputs = model(X_data_test)
 
-# Retrieve the output as spectrogram object. 
+# Retrieve the output as spectrogram object.
 # It will use processor.backward() to get unprocessed data,
-# so use a custom DataProcessor that is reversible, otherwise, this step will be inconsistant. 
+# so use a custom DataProcessor that is reversible, otherwise, this step will be inconsistant.
 # The shape of output must be (batch, channels, *stft.shape)
 output_spectrograms = factory.get_spectrogram_from_model_output(outputs)
 
-# You can now display, save, or anything you want ... 
+# You can now display, save, or anything you want ...
 fig, axes = plt.subplots(output_spectrograms.shape[0], 2)
 for i, spectrogram in enumerate(output_spectrograms):
     spectrogram.show_image_on_axis(axs[i][0], DisplayType.INDEX, index = i)
     spectrogram.show_wave_on_axis(axs[i][1], DisplayType.INDEX, index = i)
-for i, spectrogram in enumerate(output_spectrograms):
     spectrogram.save_as_file(f"output/<model_name>_{i+1}.wav")
 ```
 
-### f) Basic usage : list ordering
+### f - Basic usage : list ordering
+
 There is now 2 ListOrdering possible that you can set in SpectrogramFactory. It allows to change the order amplitude and phase. When the datas are passed from a list of complexe 2D array to a float 3D array, it set the amplitude every 2\*n, and phase every 2\*n + 1. For a 3 channel audio, we would have [A1, P1, A2, P2, A3, P3] (An and Pn being Amplitude and Phase of channel n).
+
 - ListOrdering.ALTERNATE (default) : this is the default ordering, it let the normal order : [A1, P1, ..., An, Pn].
 - ListOrdering.AMPLITUDE_PHASE : when calling get_numpy_dataset, it change the order to : [A1, ..., An, P1, ..., Pn]. It rearange to normal order when calling get_spectrogram_from_model_output. (Spectrogram always store as ALTERNATE order, ListOrdering just allows to have the desired order in the dataset)
 
 ```python
 from SpectrogramUtils import ListOrdering
 
-factory = SpectrogramFactory(config, processor, data.AudioPadding.RPAD_RCUT, ListOrdering.AMPLITUDE_PHASE)
+factory = SpectrogramFactory(config, processor, AudioPadding.RPAD_RCUT, ListOrdering.AMPLITUDE_PHASE)
 ```
