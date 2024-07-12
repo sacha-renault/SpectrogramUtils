@@ -7,6 +7,7 @@
 - Preprocess datas
 - Having a simple flow from complexe arrays in stft to float 64 arrays
 - Get back datas from a DL model directly as audio
+- This library first purpose is not made to make dataset for classfiers, but for generative AI.
 
 ## II - Usage
 
@@ -97,6 +98,7 @@ processed_data = get_numpy_dataset(files, use_processor = True)
 
 # Any fit processor that is used before calling fit will raise an error
 # Normal processor processor doesn't need to be fit
+processor.save("processor.pkl") # save to skip the fit phase next time
 ```
 
 #### Create
@@ -158,7 +160,7 @@ class YourFitDataProcessor(AbstractFitDataProcessor):
         # TODO
 ```
 
-### c) Basic usage : use padding
+### d) Basic usage : use padding
 #### Usage
 Basic padding function already exist, it's simple to set them up in the factory
 ```python
@@ -176,4 +178,37 @@ def my_padding_function(audio_array : npt.NDArray, audio_length : int) -> npt.ND
     # TODO
     # PAD the audio if too small compare to the target audio length
     # CUT the audio if it's too long
+```
+
+### e) Basic usage : retrieve data from a DL model
+```python
+# Build a dataset and train a deep learning model. 
+# We are more talking about generative AI, we don't need to retreive any data from a classifier. 
+# In this example, we train a model to denoize some audio
+noized_data = ... # load files
+X_data = factory.get_numpy_dataset(noized_data) # Make your own dataset
+clean_data = ... # load files
+y_data = factory.get_numpy_dataset(clean_data) # Make your own dataset
+... # Suppose your split your dataset into train, validation and test after ...
+
+# Define your model, can be any framework
+model = ...
+model.fit(X_data_train, y_data_train, validation_data = (X_data_validation, y_data_validation)) # Example of fitting
+
+# Let your model produce some outputs
+outputs = model(X_data_test) 
+
+# Retrieve the output as spectrogram object. 
+# It will use processor.backward() to get unprocessed data,
+# so use a custom DataProcessor that is reversible, otherwise, this step will be inconsistant. 
+# The shape of output must be (batch, channels, *stft.shape)
+output_spectrograms = factory.get_spectrogram_from_model_output(outputs)
+
+# You can now display, save, or anything you want ... 
+fig, axes = plt.subplots(output_spectrograms.shape[0], 2)
+for i, spectrogram in enumerate(output_spectrograms):
+    spectrogram.show_image_on_axis(axs[i][0], DisplayType.INDEX, index = i)
+    spectrogram.show_wave_on_axis(axs[i][1], DisplayType.INDEX, index = i)
+for i, spectrogram in enumerate(output_spectrograms):
+    spectrogram.save_as_file(f"output/<model_name>_{i+1}.wav")
 ```
