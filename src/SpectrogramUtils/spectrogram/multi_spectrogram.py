@@ -217,7 +217,7 @@ class MultiSpectrogram:
             waves[i] = wave
         return waves
     
-    def save_to_file(self, file_name : str) -> None:
+    def save_as_file(self, file_name : str) -> None:
         if not file_name.endswith(".wav"):
             file_name += ".wav"
         if self.num_stfts <=2:
