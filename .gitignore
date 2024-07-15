@@ -8,3 +8,4 @@ build
 *egg-info
 env
 _version.py
+test.py

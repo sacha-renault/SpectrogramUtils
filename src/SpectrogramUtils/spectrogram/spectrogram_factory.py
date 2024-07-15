@@ -1,5 +1,4 @@
-from typing import Callable, Union, Optional, List, TYPE_CHECKING, Any
-import warnings
+from typing import Callable, Union, Optional, List, Any
 import os
 
 import numpy as np
@@ -13,10 +12,6 @@ from ..data.data import AudioPadding, ListOrdering
 from ..misc.utils import get_multi_stft
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
 
-# Conditional imports for type hints
-if TYPE_CHECKING:
-    import torch
-    import tensorflow as tf
 
 class SpectrogramFactory:
     def __init__(self, 
@@ -37,34 +32,12 @@ class SpectrogramFactory:
         # set ordering
         self.__ordering = ordering
 
+        # define dataset pipeline
+        self.__dataset_pipe = None
+
         # Check if config is correct
         if self.__audio_padder is not None and self.__config.audio_length is None:
             raise WrongConfigurationException("Audio Padder can't be userd without a audio_length configured in the config object.")
-        
-        self.__torch_available = None
-        self.__tf_available = None
-
-    def _check_tf(self):
-        if self.__tf_available is None:
-            try:
-                import tensorflow as tf
-                self.__tf_available = True
-                self.__tf = tf
-            except ImportError:
-                self.__tf_available = False
-                self.__tf = None
-        return self.__tf_available
-    
-    def _check_torch(self):
-        if self.__torch_available is None:
-            try:
-                import torch
-                self.__torch_available = True
-                self.__torch = torch
-            except ImportError:
-                self.__torch_available = False
-                self.__torch = None
-        return self.__torch_available
 
     def get_spectrogram_from_audio(self, audio_array : np.ndarray) -> MultiSpectrogram:
         # Get the channel number
@@ -156,41 +129,6 @@ class SpectrogramFactory:
         for i, spec in enumerate(spectros):
             X_data[i] = spec.to_rearanged_data(use_processor)
         return X_data
-    
-    
-    def to_torch_dataset(self, 
-                          audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]], 
-                          use_processor : bool,
-                          device_or_obj : Optional[Union[torch.device, Any]] = None
-                          ) -> torch.Tensor:
-        if not self._check_torch():
-            raise ImportError("torch is not available")
-        
-        data = self.get_numpy_dataset(audio_or_file_list, use_processor)
-        tensor = self.__torch.Tensor(data)
-
-        if device_or_obj is not None:
-            if isinstance(device_or_obj, torch.device):
-                return tensor.to(device_or_obj)
-            else:
-                _device = getattr(device_or_obj, "device", None)
-                if _device is not None:
-                    return tensor.to(_device)
-                else:
-                    warnings.warn(f"The provided obj for device_or_obj ({type(device_or_obj)}) does not have a 'device' attribute. Returning the tensor without moving it to a device.")
-                    return tensor
-        else:
-            return tensor
-        
-    def to_tf_dataset(self, 
-                    audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]], 
-                    use_processor : bool,
-                    ) -> tf.Tensor:
-        if not self._check_tf():
-            raise ImportError("tensorflow is not available")
-        
-        data = self.get_numpy_dataset(audio_or_file_list, use_processor)
-        return self.__tf.Tensor(data)
 
 
     

@@ -15,7 +15,7 @@ pip install . -v
 - all together
 
 ```sh
-python3 setup.py sdist bdist_wheel & pip install . -v
+python3 setup.py sdist bdist_wheel & pip install .
 ```
 
 # Show pip version
