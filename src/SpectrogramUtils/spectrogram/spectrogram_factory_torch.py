@@ -21,6 +21,27 @@ class SpectrogramTorchFactory(SpectrogramFactory):
                           use_processor : bool,
                           device_or_obj : Optional[Union[torch.device, Any]] = None
                           ) -> torch.Tensor:
+        """
+        Converts the given audio or file list to a PyTorch dataset.
+
+        Args:
+            audio_or_file_list (Union[List[Union[str, npt.NDArray[np.float64]]], List[MultiSpectrogram]]): 
+                A list containing either file paths to audio files, numpy arrays representing audio data,
+                or a list of MultiSpectrogram instances.
+            use_processor (bool): 
+                A boolean flag indicating whether to process the data before converting it to a PyTorch dataset.
+            device_or_obj (Optional[Union[torch.device, Any]], optional): 
+                A torch.device to move the tensor to, or an object with a 'device' attribute specifying the device.
+                Defaults to None.
+
+        Raises:
+            ImportError: 
+                If PyTorch is not available, this error is raised.
+
+        Returns:
+            torch.Tensor: 
+                A PyTorch tensor containing the processed audio data, optionally moved to the specified device.
+        """
         if not TORCH_AVAILABLE:
             raise ImportError("torch is not available")
         

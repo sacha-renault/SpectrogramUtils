@@ -46,15 +46,15 @@ class MultiSpectrogram:
 
     
     def to_data(self, process_data : bool = False) -> npt.NDArray[np.float64]:
-        """#### return a stereo spectrogram. Indexes precisions :
+        """return a stereo spectrogram. Indexes precisions :
         - 2*n : amplitude of stft at index n
         - 2*n + 1 : phase of stft at index n
 
-        #### Args:
-            - process (bool): if data need to be processed
+        Args:
+            process (bool): if data need to be processed
 
-        #### Returns:
-            - np.ndarray: multi spectrogram
+        Returns:
+            np.ndarray: multi spectrogram
         """
         if process_data:
             if self.__processor is not None:
@@ -66,6 +66,16 @@ class MultiSpectrogram:
         return data
     
     def to_rearanged_data(self, process_data : bool = False):
+        """return a stereo spectrogram with rearanged indexes. Indexes precisions :
+        - 2*n : amplitude of stft at index n
+        - 2*n + 1 : phase of stft at index n
+
+        Args:
+            process (bool): if data need to be processed
+
+        Returns:
+            np.ndarray: multi spectrogram
+        """
         data = self.to_data(process_data)
         if self.__ordering == ListOrdering.AMPLITUDE_PHASE:
             data = np.concatenate((data[::2], data[1::2]), axis = 0) # Rearange the order of the amplitudes and phases
@@ -78,20 +88,20 @@ class MultiSpectrogram:
         
     @property
     def ordering(self) -> ListOrdering:
-        """#### Return the list ordering set for this spectrogram
+        """Return the list ordering set for this spectrogram
         """
         return self.__ordering
     
     
     @property
     def num_stfts(self) -> int:
-        """#### Number of stfts in the spectrogram, equivalent to the number of channels in the audio.
+        """Number of stfts in the spectrogram, equivalent to the number of channels in the audio.
         """
         return self.__data.shape[0] // 2
     
     @property
     def shape(self):
-        """#### return the shape of the spectrogram
+        """return the shape of the spectrogram
         """
         return self.__data.shape
     
@@ -102,15 +112,15 @@ class MultiSpectrogram:
                            use_processor : bool = False,
                            *axes_args, 
                            **axes_kwargs) -> None:
-        """#### Show the stft on the given axis (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
+        """Show the stft on the given axis (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
 
-        #### Args:
-            - axis (axes.Axes): Axis to display the stereo spectrogram
-            - display_type (DisplayType, optional): How to display the stereo spectrogram. Defaults to DisplayType.MEAN.
+        Args:
+            axis (axes.Axes): Axis to display the stereo spectrogram
+            display_type (DisplayType, optional): How to display the stereo spectrogram. Defaults to DisplayType.MEAN.
             
-        #### Raises:
-            - NoIndexException: DisplayType is INDEX but no index provided
-            - WrongDisplayTypeException: this DisplayType isn't handled for this method
+        Raises:
+            NoIndexException: DisplayType is INDEX but no index provided
+            WrongDisplayTypeException: this DisplayType isn't handled for this method
         """
         # init new data
         display_data = np.zeros_like(self.to_data(use_processor)[0], dtype=np.complex128)
@@ -162,15 +172,15 @@ class MultiSpectrogram:
                           index : Union[int, None] = None, 
                           *axes_args, 
                           **axes_kwargs) -> None:
-        """#### Show the wave shape on a given axis 
+        """Show the wave shape on a given axis 
 
-        #### Args:
-            - axis (axes.Axes): Axis to display the stereo spectrogram
-            - display_type (DisplayType, optional): How to display the wave. Defaults to DisplayType.STACK.
+        Args:
+            axis (axes.Axes): Axis to display the stereo spectrogram
+            display_type (DisplayType, optional): How to display the wave. Defaults to DisplayType.STACK.
 
-        #### Raises:
-            - NoIndexException: DisplayType is INDEX but no index provided
-            - WrongDisplayTypeException: this DisplayType isn't handled for this method
+        Raises:
+            NoIndexException: DisplayType is INDEX but no index provided
+            WrongDisplayTypeException: this DisplayType isn't handled for this method
         """
         axis.set_xlabel('Time')
         axis.set_ylabel('Amplitude')
@@ -193,34 +203,34 @@ class MultiSpectrogram:
             raise WrongDisplayTypeException(f"Cannot use display type {display_type.name} for image display")
     
     def get_stft(self, index : int, use_processor : bool = False) -> npt.NDArray[np.complex128]:
-        """#### Get a stft at a specified index
+        """Get a stft at a specified index
 
-        #### Args:
-            - index (int): index of channel to get the stft
+        Args:
+            index (int): index of channel to get the stft
 
-        #### Returns:
-            - np.ndarray: stft at the requested index
+        Returns:
+            np.ndarray: stft at the requested index
         """
         return self.to_data(use_processor)[2*index] + 1j * self.to_data(use_processor)[2*index + 1]
 
     def get_wave(self, index : int) -> npt.NDArray[np.float64]:
-        """#### Get the wave shape for the channel at the requested index
+        """Get the wave shape for the channel at the requested index
 
-        #### Args:
-            - index (int): requested channel index
+        Args:
+            index (int): requested channel index
 
-        #### Returns:
-            - np.ndarray: 1D wave shape
+        Returns:
+            np.ndarray: 1D wave shape
         """
         stft = self.get_stft(index, False)
         wave = librosa.istft(stft, **self.__conf.get_istft_kwargs())
         return wave
     
     def get_waves(self) -> npt.NDArray[np.float64]:
-        """#### Get the wave shape for all channels
+        """Get the wave shape for all channels
 
-        #### Returns:
-            - np.ndarray: n-Dimentional wave shape
+        Returns:
+            np.ndarray: n-Dimentional wave shape
         """
         waves = None
         for i in range(self.num_stfts): 
@@ -231,13 +241,13 @@ class MultiSpectrogram:
         return waves
     
     def save_as_file(self, file_name : str) -> None:
-        """#### save the file as wav
+        """save the file as wav
 
-        #### Args:
-            - file_name (str): file name
+        Args:
+            file_name (str): file name
 
-        #### Raises:
-            - UnknownWavTypeException: Cannot save as wav file that has more than 2 channels. please call method 
+        Raises:
+            UnknownWavTypeException: Cannot save as wav file that has more than 2 channels. please call method 
             get_waves and setup a custom save function.
         """
         if not file_name.endswith(".wav"):

@@ -32,14 +32,28 @@ class SpectrogramFactory:
         # set ordering
         self.__ordering = ordering
 
-        # define dataset pipeline
-        self.__dataset_pipe = None
-
         # Check if config is correct
         if self.__audio_padder is not None and self.__config.audio_length is None:
             raise WrongConfigurationException("Audio Padder can't be userd without a audio_length configured in the config object.")
 
     def get_spectrogram_from_audio(self, audio_array : np.ndarray) -> MultiSpectrogram:
+        """
+        Converts an audio array to a MultiSpectrogram instance.
+
+        Args:
+            audio_array (np.ndarray): 
+                A numpy array representing the audio data. The shape of the array should be (num_channels, samples).
+
+        Raises:
+            WrongConfigurationException: 
+                If the number of channels in the audio array does not match the expected number of channels in the configuration.
+            WrongConfigurationException: 
+                If the audio length or audio padding function is not provided in the configuration.
+
+        Returns:
+            MultiSpectrogram: 
+                A MultiSpectrogram instance created from the given audio array.
+        """
         # Get the channel number
         num_channels = audio_array.shape[0]
 
@@ -60,6 +74,21 @@ class SpectrogramFactory:
             raise WrongConfigurationException(f"Cannot handle data with {num_channels} channels. Configuration is set for {self.__config.num_channel} channels.")
         
     def get_spectrogram_from_path(self, file_path : str) -> MultiSpectrogram:
+        """
+        Converts an audio file from the given file path to a MultiSpectrogram instance.
+
+        Args:
+            file_path (str): 
+                The path to the audio file.
+
+        Returns:
+            MultiSpectrogram: 
+                A MultiSpectrogram instance created from the audio file.
+
+        Raises:
+            AssertionError: 
+                If the file does not exist or if the sample rate of the file does not match the configured sample rate.
+        """
         # assert file exist
         assert os.path.isfile(file_path), f"The file {file_path} doesn't exist"
 
@@ -73,6 +102,21 @@ class SpectrogramFactory:
         return self.get_spectrogram_from_audio(audio.transpose())
     
     def get_spectrograms_from_files(self, audio_or_file_list : List[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
+        """
+        Converts a list of audio file paths or numpy arrays to a list of MultiSpectrogram instances.
+
+        Args:
+            audio_or_file_list (List[Union[str, np.ndarray]]): 
+                A list containing either file paths to audio files (as strings) or numpy arrays representing audio data.
+
+        Raises:
+            BadTypeException: 
+                If an element in the list is neither a string nor a numpy array.
+
+        Returns:
+            List[MultiSpectrogram]: 
+                A list of MultiSpectrogram instances created from the audio files or arrays.
+        """
         spectros : list[MultiSpectrogram] = []
         for audio_or_file in audio_or_file_list:
             if isinstance(audio_or_file, str):
@@ -86,14 +130,14 @@ class SpectrogramFactory:
         return spectros
     
     def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64]) -> List[MultiSpectrogram]:
-        """#### From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
+        """From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
         /!\\ the model output should be shaped like (batch, channel, h, w)
 
-        #### Args:
-            - model_output (npt.NDArray[np.float64]): [description]
+        Args:
+            model_output (npt.NDArray[np.float64]): [description]
 
-        #### Returns:
-            - list[MultiSpectrogram]: Spectrograms from the model output
+        Returns:
+            list[MultiSpectrogram]: Spectrograms from the model output
         """
         # Check if need to be reordered
         if self.__ordering == ListOrdering.AMPLITUDE_PHASE:
@@ -116,7 +160,26 @@ class SpectrogramFactory:
                           audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]], 
                           use_processor : bool
                           ) -> npt.NDArray[np.float64]:
-        
+        """
+        Converts a list of audio files or MultiSpectrogram instances to a numpy dataset.
+
+        Args:
+            audio_or_file_list (Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]]): 
+                A list containing either file paths to audio files, numpy arrays representing audio data,
+                or a list of MultiSpectrogram instances.
+            use_processor (bool): 
+                A boolean flag indicating whether to process the data before converting it to a numpy dataset.
+
+        Raises:
+            WrongConfigurationException: 
+                If the audio length is not provided in the configuration.
+            WrongConfigurationException: 
+                If the audio padding function is not provided in the configuration.
+
+        Returns:
+            npt.NDArray[np.float64]: 
+                A numpy array containing the processed audio data.
+        """
         if self.__config.audio_length is None:
             raise WrongConfigurationException("Cannot create a numpy dataset with no audio length provided. \n" + \
                             "Set the audio_length field in the configuration.")
