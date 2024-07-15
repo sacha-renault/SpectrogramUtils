@@ -37,7 +37,7 @@ class MultiSpectrogram:
 
         # define data
         assert isinstance(data, np.ndarray), f"data must be a NDArray object, not {type(data)}"
-        assert data.dtype == np.float64, f"data type must be float64, not {data.dtype}"
+        assert data.dtype == np.float64 or data.dtype == np.float32, f"data type must be float64 or float32, not {data.dtype}"
         self.__data = data
 
         # Define ordering
