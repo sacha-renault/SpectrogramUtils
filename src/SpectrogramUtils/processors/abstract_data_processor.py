@@ -5,34 +5,34 @@ import numpy as np
 import numpy.typing as npt
 
 class AbstractDataProcessor(ABC):
-    def f_forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+    def _forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         return self.forward(data)
 
     @abstractmethod
     def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        """#### Preprocess datas, transformation must be reversible to get back to initial state in backward
+        """Preprocess datas, transformation must be reversible to get back to initial state in backward
         (i.e. self.backward(self.forward(data)) must be same as data)
 
-        #### Args:
-            - data (np.ndarray): single data
+        Args:
+            data (np.ndarray): single data
 
-        #### Returns:
-            - npt.NDArray[np.float64]: processed data
+        Returns:
+            npt.NDArray[np.float64]: processed data
         """
         ...
 
-    def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+    def _backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         return self.backward(data)
 
     @abstractmethod
     def backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        """#### Get back to inital state
+        """Get back to inital state
 
-        #### Args:
-            - data (np.ndarray): single processed data
+        Args:
+            data (np.ndarray): single processed data
 
-        #### Returns:
-            - npt.NDArray[np.float64]: deprocessed data
+        Returns:
+            npt.NDArray[np.float64]: deprocessed data
         """
         ...
 
@@ -51,36 +51,36 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
     
     @abstractmethod
     def load(self, file : Union[str, List[str]]) -> None:
-        """#### Restaure the processor to a saved states, it should set is_fitted to True. 
+        """Restaure the processor to a saved states, it should set is_fitted to True. 
 
-        #### Args:
-            - file (Union[str, list[str]]): file or files to restaure a processor states. 
+        Args:
+            file (Union[str, list[str]]): file or files to restaure a processor states. 
         """
         ...
 
     @abstractmethod
     def fit(self, fit_data : np.ndarray) -> None:
-        """#### Fit the processor to training datas. It should set is_fitted to True
+        """Fit the processor to training datas. It should set is_fitted to True
 
-        #### Args:
-            - fit_data (np.ndarray): training data
+        Args:
+            fit_data (np.ndarray): training data
         """
         ...
 
     @abstractmethod
     def save(self, file : Union[str, List[str]]) -> None:
-        """#### Save the current state of the processor into a file
+        """Save the current state of the processor into a file
 
-        #### Args:
-            - file (Union[str, list[str]]): file or files to save a processor states. 
+        Args:
+            file (Union[str, list[str]]): file or files to save a processor states. 
         """
         ...
 
-    def f_backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+    def _backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         assert self.is_fitted, "Cannot use transformation before fitting the processor"
         return self.backward(data)
     
-    def f_forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+    def _forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         assert self.is_fitted, "Cannot use transformation before fitting the processor"
         return self.forward(data)
 

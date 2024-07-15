@@ -148,7 +148,7 @@ class SpectrogramFactory:
         spectros : list[MultiSpectrogram] = []
         for x in model_output:
             # Backward process
-            backward_processed = self.__processor.backward(x)
+            backward_processed = self.__processor._backward(x)
 
             # Get the spectrogram
             spectros.append(
