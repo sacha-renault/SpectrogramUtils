@@ -31,7 +31,7 @@ from SpectrogramUtils import Config
 from SpectrogramUtils import AudioPadding
 
 # Create a config
-config = Config(2, n_fft = 512, audio_length = 44_100*5)
+config = Config(2, audio_length = 44_100*5)
 
 # Factory with no audio processor
 factory = SpectrogramFactory(config, audio_padder = AudioPadding.RPAD_RCUT)
@@ -46,6 +46,14 @@ files = [
     for audio_file in os.listdir(audio_directory)
 ]
 spectrograms = factory.get_spectrograms_from_files(files)
+```
+
+You can specify argument that will be used during stft and istft process in the configuration object : 
+```python 
+from SpectrogramUtils import Config, LibrosaSTFTArgs
+
+stft_config = LibrosaSTFTArgs(n_fft = 512, hop_length = ...) # specify any arg that can be used during a normal stft process except dtype and pad_mode
+config = Config(2, audio_length = 44_100*5, stft_config = stft_config)
 ```
 
 ### b - Basic usage : display spectrograms
@@ -72,6 +80,14 @@ spectrogram.show_image_on_axis(axs[0], DisplayType.INDEX, index = 0) # Need to p
 spectrogram.show_image_on_axis(axs[1], DisplayType.INDEX, index = 1) # Need to provide an index when display type is INDEX
 spectrogram.show_image_on_axis(axs[2], DisplayType.MEAN) # No need to provide an index when display type is not INDEX
 plt.show()
+
+# You can also set power_to_db_intensity = None to display as amplitude
+config.power_to_db_intensity = None
+```
+
+You can also display the wave shapes. You cannot use the processor to display the wave shapes. The wave shapes display can display stacked wave (mutli channel in one graph)
+```python
+spectrogram.show_wave_on_axis(axs[0], DisplayType.STACK)
 ```
 
 ### c - Basic usage : data processor
@@ -199,6 +215,8 @@ def my_padding_function(audio_array : npt.NDArray, audio_length : int) -> npt.ND
     # TODO
     # PAD the audio if too small compare to the target audio length
     # CUT the audio if it's too long
+    # The input audio arrays are shaped (num_channel, array_length)
+    # The desired output shape is (num_channel, audio_length)
 ```
 
 ### e - Basic usage : retrieve data from a DL model
@@ -246,3 +264,30 @@ from SpectrogramUtils import ListOrdering
 
 factory = SpectrogramFactory(config, processor, AudioPadding.RPAD_RCUT, ListOrdering.AMPLITUDE_PHASE)
 ```
+
+### g - Basic usage : extensions
+You can use torch or tensorflow extension for the factory. I allows to get dataset as Tensors instead of numpy arrays.
+
+```python 
+from SpectrogramUtils.extension import SpectrogramTorchFactory # Will raise an error if torch isn't installed 
+
+# You can now use 
+files = ... # list of file to load, could also do it with audio arrays already loaded
+dataset = factory.get_torch_dataset(files, True, "cuda") # get a torch.Tensor loaded on cuda device
+```
+
+Torch extension contains a method to create a batch generator. It can be used from two different ways. 
+- From an existing Tensor, it moves one batch at a time on the target device
+```python
+dataset = factory.get_torch_dataset(files, True, "cpu") # In the case the dataset is too large to be put directly on cuda
+generator = factory.get_torch_dataset_batch_generator(dataset, batch_size = 16, "cuda", infinite_generator = False) # infinite_generator = False will make the generator raise StopIteration once it has run accross all the dataset
+for batch in generator: 
+    # Do things with your batch 
+``` 
+- From files, it loads one batch a time on target device.
+```python
+files = ... # File in the dataset
+generator = factory.get_torch_dataset_batch_generator(dataset, batch_size = 16, "cuda", infinite_generator = False) # infinite_generator = False will make the generator raise StopIteration once it has run accross all the dataset
+for batch in generator: 
+    # Do things with your batch 
+``` 
