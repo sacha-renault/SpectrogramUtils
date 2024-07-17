@@ -32,7 +32,7 @@ class MultiSpectrogram:
         self.__conf = config
 
         # Set processor
-        assert isinstance(processor, AbstractDataProcessor), f"processor must heritate from AbstractDataProcessor, found type : {type(processor)}"
+        assert isinstance(processor, AbstractDataProcessor) or processor is None, f"processor must heritate from AbstractDataProcessor, found type : {type(processor)}"
         self.__processor = processor 
 
         # define data

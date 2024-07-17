@@ -71,6 +71,7 @@ def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> List[np.ndarray]:
         raise UnknownStftShapeException("Unknown shape during stft process")
 
 def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+    assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
     if audio_length < desired_audio_length:
         padding_array = np.zeros((data.shape[0], desired_audio_length - audio_length))
@@ -79,6 +80,7 @@ def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.f
         return data[:,:desired_audio_length]
     
 def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+    assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
     if audio_length < desired_audio_length:
         padding_array = np.zeros((data.shape[0], desired_audio_length - audio_length))
@@ -87,6 +89,7 @@ def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.f
         return data[:,desired_audio_length:]
     
 def center_pad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+    assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
     if audio_length < desired_audio_length:
         l_pad_length = (desired_audio_length - audio_length) // 2
