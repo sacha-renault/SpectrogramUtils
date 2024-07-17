@@ -7,8 +7,6 @@ class LibrosaSTFTArgs(dict):
             'win_length': None,  # defaults to n_fft
             'window': 'hann',
             'center': True,
-            'dtype': 'complex64',
-            'pad_mode': 'reflect'
         }
         
         # Initialize with default arguments, then update with any user-provided arguments
