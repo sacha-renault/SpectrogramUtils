@@ -2,6 +2,7 @@
 setuptools_scm
 wheel
 twine
+pytest
 
 # Usage
 numpy
