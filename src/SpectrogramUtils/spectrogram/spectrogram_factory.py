@@ -35,6 +35,10 @@ class SpectrogramFactory:
         # Check if config is correct
         if self.__audio_padder is not None and self.__config.audio_length is None:
             raise WrongConfigurationException("Audio Padder can't be userd without a audio_length configured in the config object.")
+        
+    @property
+    def num_channel(self) -> int:
+        return self.__config.num_channel
 
     def get_spectrogram_from_audio(self, audio_array : np.ndarray) -> MultiSpectrogram:
         """
@@ -192,6 +196,22 @@ class SpectrogramFactory:
         for i, spec in enumerate(spectros):
             X_data[i] = spec.to_rearanged_data(use_processor)
         return X_data
+    
+    def _get_stft_shape(self):
+        """#### Return the shape that a stft would have 
+
+        #### Returns:
+            - tuple[int, int]: stft shape
+            >>> 
+        """
+        stft_config = self.__config.get_istft_kwargs()
+        audio_length = stft_config.get("audio_length")
+        window_length = stft_config.get("window_length")
+        hop_length = stft_config.get("hop_length")
+        n_fft = stft_config.get("n_fft")
+        num_frames = (audio_length - window_length) // hop_length + 1
+        num_frequency_bins = n_fft // 2 + 1
+        return num_frequency_bins, num_frames
 
 
     
