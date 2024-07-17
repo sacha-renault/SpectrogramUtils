@@ -1,5 +1,6 @@
 from .data.data import DisplayType, AudioPadding, ListOrdering
 from .data.config import Config
+from .data.librosa_stft_args import LibrosaSTFTArgs
 from .processors.abstract_data_processor import AbstractDataProcessor, AbstractFitDataProcessor
 from .processors.scaler_audio_processor import ScalerAudioProcessor
 from .spectrogram.multi_spectrogram import MultiSpectrogram
