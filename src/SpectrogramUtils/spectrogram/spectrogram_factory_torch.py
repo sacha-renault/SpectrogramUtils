@@ -17,7 +17,7 @@ except ImportError as e:
 from .spectrogram_factory import SpectrogramFactory
 
 class SpectrogramTorchFactory(SpectrogramFactory):
-    def to_torch_dataset(self, 
+    def get_torch_dataset(self, 
                           audio_or_file_list : Union[List[Union[str, npt.NDArray[np.float64]]], List[MultiSpectrogram]], 
                           use_processor : bool,
                           device_or_obj : Union[torch.device, str, Any]
