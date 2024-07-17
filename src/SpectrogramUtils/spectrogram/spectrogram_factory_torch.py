@@ -79,6 +79,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
                           file_list_or_tensor : Union[List[str], torch.Tensor], 
                           batch_size : int,
                           device_or_obj : Union[torch.device, Any],
+                          infinite_generator : bool = False,
                           use_processor : Optional[bool] = None
                           ) -> Generator[torch.Tensor, None, None]:
         """
@@ -124,11 +125,13 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         if isinstance(file_list_or_tensor, list):
             assert all(map(lambda x : isinstance(x, str), file_list_or_tensor)), "All instances in the input list must be same type"
             assert isinstance(use_processor, bool), "When using this method with a list of string, you must specified the arg use_processor."
-            return self._torch_disk_load_generator(file_list_or_tensor, batch_size, use_processor, device_or_obj)
+            return self._torch_disk_load_generator(file_list_or_tensor, batch_size, device_or_obj, infinite_generator, use_processor)
         
         # In the other cases, we let the tensor on device, and generator just provides one batch on target device at a time
         elif isinstance(file_list_or_tensor, torch.Tensor):
-            return self._torch_generator_to_device(file_list_or_tensor, batch_size, device_or_obj)
+            if isinstance(use_processor, bool):
+                warnings.warn("use_processor will be ignore since the input datas are type torch.Tensor, that are supposed to be already processed")
+            return self._torch_generator_to_device(file_list_or_tensor, batch_size, device_or_obj, infinite_generator)
         
         else:
             raise BadTypeException(f"Cannot make a generator from type : {(type(file_list_or_tensor))}")
@@ -136,14 +139,20 @@ class SpectrogramTorchFactory(SpectrogramFactory):
     def _torch_disk_load_generator(self, 
                                    file_list : List[str], 
                                    batch_size : int, 
+                                   device_or_obj : Optional[Union[torch.device, Any]], 
+                                   infinite_generator : bool,
                                    use_processor : bool, 
-                                   device_or_obj : Optional[Union[torch.device, Any]]
                                    ) -> Generator[torch.Tensor, None, None]:
         
         # Get devices and num batches
         device = self._get_device(device_or_obj)
         num_batches = len(file_list) // batch_size
-        while True:
+
+        # Set up generator finit or not
+        loop = True
+        while loop:
+            loop = infinite_generator
+
             for i in range(num_batches): 
                 # Get files for current batch
                 batch_files = file_list[i*batch_size:(i+1)*batch_size]
@@ -167,12 +176,18 @@ class SpectrogramTorchFactory(SpectrogramFactory):
     def _torch_generator_to_device(self, 
                                    tensor: torch.Tensor, 
                                    batch_size: int, 
-                                   device_or_obj: Optional[Union[torch.device, Any]]
+                                   device_or_obj: Optional[Union[torch.device, Any]],
+                                   infinite_generator : bool
                                    ) -> Generator[torch.Tensor, None, None]:
         # Get devices and num batches
         device = self._get_device(device_or_obj)
         num_batches = tensor.size(0) // batch_size
-        while True:
+
+        # Set up generator finit or not
+        loop = True
+        while loop:
+            loop = infinite_generator
+            
             for i in range(num_batches):
                 batch = tensor[i*batch_size:(i+1)*batch_size].to(device)
                 yield batch
