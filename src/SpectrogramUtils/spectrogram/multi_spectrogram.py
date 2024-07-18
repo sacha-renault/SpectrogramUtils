@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from ..data.data import DisplayType, ListOrdering
 from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
+from ..processors.wrapper import DataProcessorWrapper
 from ..exceptions.lib_exceptions import NoProcessorException, NoIndexException, WrongDisplayTypeException, UnknownWavTypeException
 
 class MultiSpectrogram:
@@ -26,13 +27,13 @@ class MultiSpectrogram:
         # Instanciate the class with the multi spectro 
         return cls(config, processor, ordering, data)
 
-    def __init__(self, config : Config, processor : AbstractDataProcessor,  ordering : ListOrdering, data : np.ndarray) -> None:
+    def __init__(self, config : Config, processor : DataProcessorWrapper,  ordering : ListOrdering, data : np.ndarray) -> None:
         # define config
         assert isinstance(config, Config), f"config must be a Config object, not {type(config)}"
         self.__conf = config
 
         # Set processor
-        assert isinstance(processor, AbstractDataProcessor) or processor is None, f"processor must heritate from AbstractDataProcessor, found type : {type(processor)}"
+        assert isinstance(processor, DataProcessorWrapper) or processor is None
         self.__processor = processor 
 
         # define data
@@ -58,7 +59,7 @@ class MultiSpectrogram:
         """
         if process_data:
             if self.__processor is not None:
-                data = self.__processor._forward(self.__data)
+                data = self.__processor.forward(self.__data)
             else:
                 raise NoProcessorException("Askep processed data without providing a processor")
         else:

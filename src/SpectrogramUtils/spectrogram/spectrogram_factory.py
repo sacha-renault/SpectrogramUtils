@@ -8,6 +8,7 @@ import soundfile as sf
 
 from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
+from ..processors.wrapper import DataProcessorWrapper
 from .multi_spectrogram import MultiSpectrogram
 from ..data.data import AudioPadding, ListOrdering
 from ..misc.utils import get_multi_stft
@@ -27,7 +28,7 @@ class SpectrogramFactory:
 
         # Set the data processor
         assert data_processor is None or isinstance(data_processor, AbstractDataProcessor), f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
-        self.__processor = data_processor
+        self.__processor = DataProcessorWrapper(data_processor)
 
         # Set the padding functino
         assert audio_padder is None or isinstance(audio_padder, Callable), f"audio_padder must be None or Callable, not {type(audio_padder)}"
@@ -164,7 +165,7 @@ class SpectrogramFactory:
         spectros : list[MultiSpectrogram] = []
         for x in model_output:
             # Backward process
-            backward_processed = self.__processor._backward(x)
+            backward_processed = self.__processor.backward(x)
 
             # Get the spectrogram
             spectros.append(

@@ -5,9 +5,6 @@ import numpy as np
 import numpy.typing as npt
 
 class AbstractDataProcessor(ABC):
-    def _forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        return self.forward(data)
-
     @abstractmethod
     def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         """Preprocess datas, transformation must be reversible to get back to initial state in backward
@@ -21,9 +18,6 @@ class AbstractDataProcessor(ABC):
         """
         ...
 
-    def _backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        return self.backward(data)
-
     @abstractmethod
     def backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
         """Get back to inital state
@@ -35,6 +29,13 @@ class AbstractDataProcessor(ABC):
             npt.NDArray[np.float64]: deprocessed data
         """
         ...
+
+    def _check_reversible(self) -> None:
+        rnd_data = np.random.rand(1,4,256,256)
+        rnd_data_retrieval = self.backward(self.forward(rnd_data))
+        err = np.mean(np.abs(rnd_data - rnd_data_retrieval))
+        if rnd_data.shape != rnd_data_retrieval.shape or err > 1e-15:
+            raise Exception(f"The data processor doesn't retreive the data properly. Max err : {1e-15}, found : {err}. Considere using a AbstractDestructiveDataProcessor")
 
 
 class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
@@ -75,14 +76,10 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
             file (Union[str, list[str]]): file or files to save a processor states. 
         """
         ...
-
-    def _backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        assert self.is_fitted, "Cannot use transformation before fitting the processor"
-        return self.backward(data)
     
-    def _forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        assert self.is_fitted, "Cannot use transformation before fitting the processor"
-        return self.forward(data)
 
-
-
+class AbstractDestructiveDataProcessor(AbstractDataProcessor, ABC):
+    """#### A data processor that doesn't have a backward pass
+    """
+    def backward(self, _) -> npt.NDArray[np.float64]:
+        raise Exception("Destructive Data Processor cannot backward")
