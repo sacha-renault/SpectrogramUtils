@@ -20,9 +20,9 @@ class MultiSpectrogram:
 
         # create a data
         data = np.zeros(shape = (2 * len(stfts), *stfts[0].shape))
-        for i, stft in enumerate(stfts):
-            data[2*i] = stft.real
-            data[2*i + 1] = stft.imag
+        for i, D in enumerate(stfts):
+            data[2*i] = np.abs(D)
+            data[2*i + 1] = np.angle(D)
         
         # Instanciate the class with the multi spectro 
         return cls(config, processor, ordering, data)
@@ -127,32 +127,22 @@ class MultiSpectrogram:
         display_data = np.zeros_like(self.to_data(use_processor)[0], dtype=np.complex128)
 
         if display_type == DisplayType.MEAN:
-            data = self.to_data(use_processor)
-            mean_real = data[::2] - np.mean(data[::2])
-            mean_imag = data[1::2] - np.mean(data[1::2])
-            display_data += np.mean(mean_real, axis = 0) + 1j * np.mean(mean_imag, axis = 0)
+            data = self.to_data(use_processor)[::2]
+            display_data += np.mean(data, axis = 0)
         
         elif display_type == DisplayType.INDEX:
             if index is not None:
-                index_data = self.get_stft(index, use_processor)
-                full_data = self.to_data(use_processor)
-                mean_real = np.mean(full_data[::2])
-                mean_imag = np.mean(full_data[1::2])
-                display_data += (index_data - mean_real - 1j * mean_imag)
+                display_data += self.to_data(use_processor)[index*2]
             else:
                 raise NoIndexException("Can't display index if no index is provided")
             
         elif display_type == DisplayType.MAX:
-            data = self.to_data(use_processor)
-            mean_real = data[::2] - np.mean(data[::2])
-            mean_imag = data[1::2] - np.mean(data[1::2])
-            display_data += np.max(mean_real, axis = 0) + 1j * np.max(mean_imag, axis = 0)
+            data = self.to_data(use_processor)[::2]
+            display_data += np.max(data, axis = 0)
 
         elif display_type == DisplayType.MIN:
-            data = self.to_data(use_processor)
-            mean_real = data[::2] - np.mean(data[::2])
-            mean_imag = data[1::2] - np.mean(data[1::2])
-            display_data += np.min(mean_real, axis = 0) + 1j * np.min(mean_imag, axis = 0)
+            data = self.to_data(use_processor)[::2]
+            display_data += np.min(data, axis = 0)
         
         else:
             raise WrongDisplayTypeException(f"Cannot use display type {display_type.name} for image display")
@@ -212,7 +202,8 @@ class MultiSpectrogram:
         Returns:
             np.ndarray: stft at the requested index
         """
-        return self.to_data(use_processor)[2*index] + 1j * self.to_data(use_processor)[2*index + 1]
+        data = self.to_data(use_processor)
+        return data[2*index] * np.exp(1j * data[2*index + 1])
 
     def get_wave(self, index : int) -> npt.NDArray[np.float64]:
         """Get the wave shape for the channel at the requested index

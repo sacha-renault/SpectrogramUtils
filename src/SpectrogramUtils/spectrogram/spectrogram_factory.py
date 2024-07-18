@@ -146,7 +146,7 @@ class SpectrogramFactory:
                 raise BadTypeException(f"Couldn't handle type : {type(audio_or_file)}. Can only get file_path as str and audio_file as NDArray")
         return spectros
     
-    def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64]) -> List[MultiSpectrogram]:
+    def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64], use_processor : bool = True) -> List[MultiSpectrogram]:
         """From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
         /!\\ the model output should be shaped like (batch, channel, h, w)
 
@@ -165,11 +165,12 @@ class SpectrogramFactory:
         spectros : list[MultiSpectrogram] = []
         for x in model_output:
             # Backward process
-            backward_processed = self.__processor.backward(x)
+            if use_processor:
+                x = self.__processor.backward(x)
 
             # Get the spectrogram
             spectros.append(
-                MultiSpectrogram(self.__config, self.__processor, self.__ordering, backward_processed))
+                MultiSpectrogram(self.__config, self.__processor, self.__ordering, x))
             
         return spectros
     

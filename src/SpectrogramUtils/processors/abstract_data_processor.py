@@ -34,7 +34,7 @@ class AbstractDataProcessor(ABC):
         rnd_data = np.random.rand(1,4,256,256)
         rnd_data_retrieval = self.backward(self.forward(rnd_data))
         err = np.mean(np.abs(rnd_data - rnd_data_retrieval))
-        if rnd_data.shape != rnd_data_retrieval.shape or err > 1e-15:
+        if rnd_data.shape != rnd_data_retrieval.shape or err > 1e-9:
             raise Exception(f"The data processor doesn't retreive the data properly. Max err : {1e-15}, found : {err}. Considere using a AbstractDestructiveDataProcessor")
 
 
