@@ -1,4 +1,5 @@
 from typing import Callable, Union, Optional, List, Any
+from collections.abc import Iterable 
 import os
 
 import numpy as np
@@ -21,20 +22,25 @@ class SpectrogramFactory:
                 ordering : ListOrdering = ListOrdering.ALTERNATE
                 ) -> None:
         # Set the config
+        assert isinstance(config, Config), f"config must be Config, not {type(config)}"
         self.__config = config
 
         # Set the data processor
+        assert data_processor is None or isinstance(data_processor, AbstractDataProcessor), f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
         self.__processor = data_processor
 
         # Set the padding functino
+        assert audio_padder is None or isinstance(audio_padder, Callable), f"audio_padder must be None or Callable, not {type(audio_padder)}"
         self.__audio_padder = audio_padder
 
         # set ordering
+        assert isinstance(ordering, ListOrdering), f"ordering must be type ListOrdering, not {type(ordering)}"
         self.__ordering = ordering
 
         # Check if config is correct
-        if self.__audio_padder is not None and self.__config.audio_length is None:
-            raise WrongConfigurationException("Audio Padder can't be userd without a audio_length configured in the config object.")
+        if (self.__audio_padder is not None and self.__config.audio_length is None) or \
+            (self.__audio_padder is None and self.__config.audio_length is not None):
+            raise WrongConfigurationException("audio_padder and audio_length (in config object) must be either both set or both None")
         
     @property
     def num_channel(self) -> int:
@@ -105,12 +111,12 @@ class SpectrogramFactory:
         # return the spectro
         return self.get_spectrogram_from_audio(audio.transpose())
     
-    def get_spectrograms_from_files(self, audio_or_file_list : List[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
+    def get_spectrograms_from_files(self, audio_or_file_list : Iterable[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
         """
         Converts a list of audio file paths or numpy arrays to a list of MultiSpectrogram instances.
 
         Args:
-            audio_or_file_list (List[Union[str, np.ndarray]]): 
+            audio_or_file_list (Iterable[Union[str, np.ndarray]]): 
                 A list containing either file paths to audio files (as strings) or numpy arrays representing audio data.
 
         Raises:
@@ -121,7 +127,13 @@ class SpectrogramFactory:
             List[MultiSpectrogram]: 
                 A list of MultiSpectrogram instances created from the audio files or arrays.
         """
+        # Type assertion
+        assert isinstance(audio_or_file_list, Iterable), f"audio_or_file_list must be an iterable, not {type(audio_or_file_list)}"
+
+        # Init the return list
         spectros : list[MultiSpectrogram] = []
+
+        # Iterate over the list to get spectrograms
         for audio_or_file in audio_or_file_list:
             if isinstance(audio_or_file, str):
                 spectros.append(
