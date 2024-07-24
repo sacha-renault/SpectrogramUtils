@@ -6,7 +6,7 @@ from src.SpectrogramUtils.exceptions.lib_exceptions import WrongConfigurationExc
 def test_factory_constructor_success():
     config = Config(4)
     processor = ScalerAudioProcessor()
-    factory = SpectrogramFactory(config, processor)
+    factory = SpectrogramFactory(config, None, processor)
     assert factory.num_channel == 4
 
 def test_factory_constructor_success_2():
@@ -16,7 +16,7 @@ def test_factory_constructor_success_2():
 
 def test_factory_constructor_success_3():
     config = Config(4, audio_length=1000)
-    factory = SpectrogramFactory(config, None, AudioPadding.LPAD_LCUT)
+    factory = SpectrogramFactory(config, None, None, AudioPadding.LPAD_LCUT)
     assert factory.num_channel == 4
 
 def test_factory_constructor_fails():
@@ -32,7 +32,7 @@ def test_factory_constructor_fails_2():
 def test_factory_constructor_fails_3():
     config = Config(4)
     with pytest.raises(WrongConfigurationException):
-        SpectrogramFactory(config, None, lambda x, y : x)
+        SpectrogramFactory(config, None, None, lambda x, y : x)
 
 def test_factory_constructor_fails_4():
     config = Config(4)

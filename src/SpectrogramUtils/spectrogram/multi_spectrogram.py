@@ -11,26 +11,30 @@ from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
 from ..processors.wrapper import DataProcessorWrapper
 from ..exceptions.lib_exceptions import NoProcessorException, NoIndexException, WrongDisplayTypeException, UnknownWavTypeException
+from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 
 class MultiSpectrogram:
     @classmethod
-    def from_stfts(cls, config : Config, processor : AbstractDataProcessor = None, ordering : ListOrdering = None, *stfts : np.ndarray):
+    def from_stfts(cls, config : Config, stft_processor : AbstractStftComplexProcessor, processor : AbstractDataProcessor = None, ordering : ListOrdering = None, *stfts : np.ndarray):
         # assert same shape
         assert all(stft.shape == stfts[0].shape for stft in stfts), "All stfts shape should be the same"
 
         # create a data
-        data = np.zeros(shape = (2 * len(stfts), *stfts[0].shape))
-        for i, D in enumerate(stfts):
-            data[2*i] = np.abs(D)
-            data[2*i + 1] = np.angle(D)
+        data = np.zeros(shape = stft_processor.shape(stfts))
+        for i, stft in enumerate(stfts):
+            stft_processor.complexe_to_real(stft, data, i)
         
         # Instanciate the class with the multi spectro 
-        return cls(config, processor, ordering, data)
+        return cls(config, stft_processor, processor, ordering, data)
 
-    def __init__(self, config : Config, processor : DataProcessorWrapper,  ordering : ListOrdering, data : np.ndarray) -> None:
+    def __init__(self, config : Config, stft_processor : AbstractStftComplexProcessor, processor : DataProcessorWrapper,  ordering : ListOrdering, data : np.ndarray) -> None:
         # define config
         assert isinstance(config, Config), f"config must be a Config object, not {type(config)}"
         self.__conf = config
+
+        # define config
+        assert isinstance(stft_processor, AbstractStftComplexProcessor), f"stft_processor must be a AbstractStftComplexProcessor object, not {type(stft_processor)}"
+        self.__stft_processor = stft_processor
 
         # Set processor
         assert isinstance(processor, DataProcessorWrapper) or processor is None
@@ -98,7 +102,7 @@ class MultiSpectrogram:
     def num_stfts(self) -> int:
         """Number of stfts in the spectrogram, equivalent to the number of channels in the audio.
         """
-        return self.__data.shape[0] // 2
+        return self.__stft_processor.num_stfts(self.__data)
     
     @property
     def shape(self):
@@ -127,21 +131,21 @@ class MultiSpectrogram:
         display_data = np.zeros_like(self.to_data(use_processor)[0], dtype=np.complex128)
 
         if display_type == DisplayType.MEAN:
-            data = self.to_data(use_processor)[::2]
+            data = self.get_stfts(use_processor)
             display_data += np.mean(data, axis = 0)
         
         elif display_type == DisplayType.INDEX:
             if index is not None:
-                display_data += self.to_data(use_processor)[index*2]
+                display_data += self.get_stft(index)
             else:
                 raise NoIndexException("Can't display index if no index is provided")
             
         elif display_type == DisplayType.MAX:
-            data = self.to_data(use_processor)[::2]
+            data = self.get_stfts(use_processor)
             display_data += np.max(data, axis = 0)
 
         elif display_type == DisplayType.MIN:
-            data = self.to_data(use_processor)[::2]
+            data = self.get_stfts(use_processor)
             display_data += np.min(data, axis = 0)
         
         else:
@@ -203,7 +207,13 @@ class MultiSpectrogram:
             np.ndarray: stft at the requested index
         """
         data = self.to_data(use_processor)
-        return data[2*index] * np.exp(1j * data[2*index + 1])
+        return self.__stft_processor.real_to_complexe(data, index)
+    
+    def get_stfts(self, use_processor : bool = False) -> npt.NDArray[np.complex128]:
+        stfts = np.zeros((self.num_stfts, *self.__data.shape[1:]), dtype=np.complex128)
+        for i in range(self.num_stfts):
+            stfts[i] = self.get_stft(i, use_processor)
+        return stfts
 
     def get_wave(self, index : int) -> npt.NDArray[np.float64]:
         """Get the wave shape for the channel at the requested index

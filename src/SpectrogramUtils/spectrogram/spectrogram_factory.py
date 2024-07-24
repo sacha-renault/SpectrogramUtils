@@ -1,5 +1,6 @@
 from typing import Callable, Union, Optional, List, Any
 from collections.abc import Iterable 
+import pickle
 import os
 
 import numpy as np
@@ -13,11 +14,14 @@ from .multi_spectrogram import MultiSpectrogram
 from ..data.data import AudioPadding, ListOrdering
 from ..misc.utils import get_multi_stft
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
+from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
+from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
 
 
 class SpectrogramFactory:
     def __init__(self, 
                 config : Config,
+                stft_processor : Optional[AbstractStftComplexProcessor] = None,
                 data_processor : Optional[AbstractDataProcessor] = None,
                 audio_padder : Optional[Callable[[np.ndarray, int], np.ndarray]] = AudioPadding.NONE,
                 ordering : ListOrdering = ListOrdering.ALTERNATE
@@ -27,8 +31,12 @@ class SpectrogramFactory:
         self.__config = config
 
         # Set the data processor
-        assert data_processor is None or isinstance(data_processor, AbstractDataProcessor), f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
-        self.__processor = DataProcessorWrapper(data_processor)
+        assert stft_processor is None or isinstance(stft_processor, AbstractStftComplexProcessor), f"stft_processor must be None or AbstractStftComplexProcessor, not {type(stft_processor)}"
+        self.__stft_processor = stft_processor if stft_processor is not None else RealImageStftProcessor()
+
+        # Set the data processor
+        assert data_processor is None or isinstance(data_processor, (AbstractDataProcessor, DataProcessorWrapper)), f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
+        self.__processor = data_processor if isinstance(data_processor, DataProcessorWrapper) else DataProcessorWrapper(data_processor)
 
         # Set the padding functino
         assert audio_padder is None or isinstance(audio_padder, Callable), f"audio_padder must be None or Callable, not {type(audio_padder)}"
@@ -42,6 +50,50 @@ class SpectrogramFactory:
         if (self.__audio_padder is not None and self.__config.audio_length is None) or \
             (self.__audio_padder is None and self.__config.audio_length is not None):
             raise WrongConfigurationException("audio_padder and audio_length (in config object) must be either both set or both None")
+        
+    def save(self, save_dir : str):
+        # Check if dir exist
+        if not os.path.isdir(os.path.dirname(save_dir)):
+            raise NotADirectoryError(f"The directory doesn't exist : {os.path.dirname(save_dir)}")
+        
+        # check if dir already exist
+        elif os.path.isdir(save_dir):
+            raise FileExistsError("Directory already exist, delete it or choose an other name")
+        
+        # else save
+        else:
+            os.mkdir(save_dir)
+            spath = lambda x : os.path.normpath(os.path.join(save_dir, x +".pkl"))
+            with open(spath("data_processor"), "wb") as file:
+                pickle.dump(self.__processor, file)
+            with open(spath("stft_processor"), "wb") as file:
+                pickle.dump(self.__stft_processor, file)
+            with open(spath("ordering"), "wb") as file:
+                pickle.dump(self.__ordering, file)
+            with open(spath("config"), "wb") as file:
+                pickle.dump(self.__config, file)
+            with open(spath("audio_padder"), "wb") as file:
+                pickle.dump(self.__audio_padder, file)
+
+    @classmethod
+    def from_file(cls, load_dir : str):
+        if not os.path.isdir(load_dir):
+            raise NotADirectoryError(f"The directory doesn't exist: {load_dir}")
+        
+        spath = lambda x: os.path.normpath(os.path.join(load_dir, x + ".pkl"))
+        
+        with open(spath("data_processor"), "rb") as file:
+            data_processor = pickle.load(file)
+        with open(spath("stft_processor"), "rb") as file:
+            stft_processor = pickle.load(file)
+        with open(spath("ordering"), "rb") as file:
+            ordering = pickle.load(file)
+        with open(spath("config"), "rb") as file:
+            config = pickle.load(file)
+        with open(spath("audio_padder"), "rb") as file:
+            audio_padder = pickle.load(file)
+
+        return cls(config, stft_processor, data_processor, audio_padder, ordering)
         
     @property
     def num_channel(self) -> int:
@@ -79,7 +131,7 @@ class SpectrogramFactory:
         # If number of channels and desired channel number fit, we can do stfts
         if num_channels == self.__config.num_channel:
             stfts = get_multi_stft(audio_array, **self.__config.get_istft_kwargs())
-            return MultiSpectrogram.from_stfts(self.__config, self.__processor, self.__ordering, *stfts)
+            return MultiSpectrogram.from_stfts(self.__config, self.__stft_processor, self.__processor, self.__ordering, *stfts)
         
         else:
             raise WrongConfigurationException(f"Cannot handle data with {num_channels} channels. Configuration is set for {self.__config.num_channel} channels.")
@@ -170,7 +222,7 @@ class SpectrogramFactory:
 
             # Get the spectrogram
             spectros.append(
-                MultiSpectrogram(self.__config, self.__processor, self.__ordering, x))
+                MultiSpectrogram(self.__config, self.__stft_processor, self.__processor, self.__ordering, x))
             
         return spectros
     

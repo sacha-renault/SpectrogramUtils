@@ -6,6 +6,9 @@ from .processors.scaler_audio_processor import ScalerAudioProcessor
 from .processors.simple_scaling_processor import SimpleScalingProcessor
 from .spectrogram.multi_spectrogram import MultiSpectrogram
 from .spectrogram.spectrogram_factory import SpectrogramFactory
+from .stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
+from .stft_complexe_processor.mag_phase_stft_processor import MagnitudePhaseStftProcessor
+from .stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
 
 try:
     from ._version import version as __version__

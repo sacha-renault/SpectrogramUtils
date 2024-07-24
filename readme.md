@@ -20,7 +20,7 @@ pip install SpectrogramUtils
 
 ## III - Usage
 
-### a - Basic usage : loading files
+### a - Loading files
 
 ```python
 # Imports
@@ -56,7 +56,7 @@ stft_config = LibrosaSTFTArgs(n_fft = 512, hop_length = ...) # specify any arg t
 config = Config(2, audio_length = 44_100*5, stft_config = stft_config)
 ```
 
-### b - Basic usage : display spectrograms
+### b - Display spectrograms
 
 ```python
 # Imports
@@ -90,7 +90,7 @@ You can also display the wave shapes. You cannot use the processor to display th
 spectrogram.show_wave_on_axis(axs[0], DisplayType.STACK)
 ```
 
-### c - Basic usage : data processor
+### c - Data processor
 
 #### Usage
 
@@ -193,7 +193,7 @@ class YourFitDataProcessor(AbstractFitDataProcessor):
         # TODO
 ```
 
-### d - Basic usage : use padding
+### d - Padding
 
 #### Usage
 
@@ -219,7 +219,7 @@ def my_padding_function(audio_array : npt.NDArray, audio_length : int) -> npt.ND
     # The desired output shape is (num_channel, audio_length)
 ```
 
-### e - Basic usage : retrieve data from a DL model
+### e - Retrieve data from a DL model
 
 ```python
 # Build a dataset and train a deep learning model.
@@ -252,7 +252,7 @@ for i, spectrogram in enumerate(output_spectrograms):
     spectrogram.save_as_file(f"output/<model_name>_{i+1}.wav")
 ```
 
-### f - Basic usage : list ordering
+### f - List ordering
 
 There is now 2 ListOrdering possible that you can set in SpectrogramFactory. It allows to change the order amplitude and phase. When the datas are passed from a list of complexe 2D array to a float 3D array, it set the amplitude every 2\*n, and phase every 2\*n + 1. For a 3 channel audio, we would have [A1, P1, A2, P2, A3, P3] (An and Pn being Amplitude and Phase of channel n).
 
@@ -265,7 +265,7 @@ from SpectrogramUtils import ListOrdering
 factory = SpectrogramFactory(config, processor, AudioPadding.RPAD_RCUT, ListOrdering.AMPLITUDE_PHASE)
 ```
 
-### g - Basic usage : extensions
+### g - Extensions
 You can use torch or tensorflow extension for the factory. I allows to get dataset as Tensors instead of numpy arrays.
 
 ```python 
@@ -291,3 +291,40 @@ generator = factory.get_torch_dataset_batch_generator(dataset, batch_size = 16, 
 for batch in generator: 
     # Do things with your batch 
 ``` 
+
+### e - Stft processing
+The goal of this library is to get real value array for DL usage from complexe stft array. There is two ways implemented at the current time. 
+For a complexe stft array shaped (n, h, w) : 
+- RealImageStftProcessor will return a real array of shape (2 * n, h, w) following : 
+
+![Real_{(2k, i, j)} = \mathfrak{Re}(\operatorname{Complexe}_{(k, i, j)})](https://latex.codecogs.com/svg.latex?Real_{(2k,%20i,%20j)}%20=%20\mathfrak{Re}(\operatorname{Complexe}_{(k,%20i,%20j)}))
+
+![Real_{(2k + 1, i, j)} = \mathfrak{Im}(\operatorname{Complexe}_{(k, i, j)})](https://latex.codecogs.com/svg.latex?Real_{(2k%20+%201,%20i,%20j)}%20=%20\mathfrak{Im}(\operatorname{Complexe}_{(k,%20i,%20j)}))
+
+
+- MagnitudePhaseStftProcessor will return a real array of shape (2 * n, h, w) following : 
+
+![Real_{(2k, i, j)} = |\operatorname{Complexe}_{(k, i, j)}|](https://latex.codecogs.com/svg.latex?Real_{(2k,%20i,%20j)}%20=%20|\operatorname{Complexe}_{(k,%20i,%20j)}|)
+
+![Real_{(2k + 1, i, j)} = \arg(\operatorname{Complexe}_{(k, i, j)})](https://latex.codecogs.com/svg.latex?Real_{(2k%20+%201,%20i,%20j)}%20=%20\arg(\operatorname{Complexe}_{(k,%20i,%20j)}))
+
+#### Usage
+```python
+# Imports
+from SpectrogramUtils import RealImageStftProcessor, MagnitudePhaseStftProcessor
+... 
+
+# Instanciate
+config = ...
+data_processor = ... 
+
+# Choose a stft processor
+stft_processor = RealImageStftProcessor # or = MagnitudePhaseStftProcessor
+
+# Create the factory
+factory = SpectrogramFactory(config = config,
+                stft_processor = stft_processor,
+                data_processor = data_processor,
+                audio_padder = AudioPadding.CENTER_RCUT, 
+                ordering = ListOrdering.ALTERNATE)
+```
