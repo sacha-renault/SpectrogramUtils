@@ -1,6 +1,5 @@
 __pycache__
 *.wav
-*.ipynb
 *.pkl
 obj
 dist
@@ -10,3 +9,8 @@ env
 _version.py
 test.py
 *.json
+build.log
+
+# Exclude ipynb except some defined
+*.ipynb
+!install.ipynb
