@@ -1,6 +1,8 @@
 from typing import Callable, Union, Optional, List, Any
 from collections.abc import Iterable 
 import pickle
+import json
+import warnings
 import os
 
 import numpy as np
@@ -16,6 +18,7 @@ from ..misc.utils import get_multi_stft
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
+from .._version import version as __version__
 
 
 class SpectrogramFactory:
@@ -53,7 +56,7 @@ class SpectrogramFactory:
         
     def save(self, save_dir : str):
         # Check if dir exist
-        if not os.path.isdir(os.path.dirname(save_dir)):
+        if not os.path.isdir(os.path.dirname(save_dir)) and not os.path.dirname(save_dir) == "":
             raise NotADirectoryError(f"The directory doesn't exist : {os.path.dirname(save_dir)}")
         
         # check if dir already exist
@@ -74,6 +77,8 @@ class SpectrogramFactory:
                 pickle.dump(self.__config, file)
             with open(spath("audio_padder"), "wb") as file:
                 pickle.dump(self.__audio_padder, file)
+            with open(os.path.join(save_dir, "config.json"), "w") as file:
+                json.dump({"version" : __version__}, file)
 
     @classmethod
     def from_file(cls, load_dir : str):
@@ -82,6 +87,10 @@ class SpectrogramFactory:
         
         spath = lambda x: os.path.normpath(os.path.join(load_dir, x + ".pkl"))
         
+        with open(os.path.join(load_dir, "config.json")) as file:
+            json_config : dict = json.load(file)
+            if json_config.get("version", "0.0.0") != __version__:
+                warnings.warn(f"Found factory saved on version {json_config.get('version', '0.0.0')}. Current version is {__version__}. Factory might be broken, either install correct version or use at your own risk")
         with open(spath("data_processor"), "rb") as file:
             data_processor = pickle.load(file)
         with open(spath("stft_processor"), "rb") as file:

@@ -9,3 +9,4 @@ build
 env
 _version.py
 test.py
+*.json
