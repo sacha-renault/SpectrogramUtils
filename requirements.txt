@@ -5,6 +5,7 @@ twine
 pytest
 
 # Usage
+numpy==1.19.3
 librosa
 soundfile
 matplotlib
