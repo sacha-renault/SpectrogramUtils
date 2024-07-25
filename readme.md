@@ -56,6 +56,14 @@ stft_config = LibrosaSTFTArgs(n_fft = 512, hop_length = ...) # specify any arg t
 config = Config(2, audio_length = 44_100*5, stft_config = stft_config)
 ```
 
+You can since 0.4.1 save the factory in a directory and load it later. The version must still be compatible
+```python
+factory.save("path/to/your/save_dir")
+
+# ...
+factory = SpectrogramFactory.from_file("path/to/your/save_dir")
+```
+
 ### b - Display spectrograms
 
 ```python
