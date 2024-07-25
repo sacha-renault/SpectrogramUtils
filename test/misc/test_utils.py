@@ -54,3 +54,21 @@ def test_center_pad_rcut_many():
     for i in range(200):
         result = utils.center_pad_rcut(array, 5000 + i)
         assert result.shape == (2, 5000 + i)
+
+def test_rpad_rcut_normal_smaller():
+    array = np.random.rand(2, 1000)
+    result = utils.rpad_rcut(array, 500)
+    assert result.shape == (2, 500)
+    assert np.array_equal(array, result[:, :500])
+
+def test_lpad_lcut_normal_smaller():
+    array = np.random.rand(2, 1000)
+    result = utils.lpad_lcut(array, 500)
+    assert result.shape == (2, 500)
+    assert np.array_equal(array, result[:, -500:])
+
+def test_center_pad_rcut_normal_smaller():
+    array = np.random.rand(2, 1000)
+    result = utils.center_pad_rcut(array, 500)
+    assert result.shape == (2, 500)
+    assert np.array_equal(array, result[:, :500])
