@@ -15,3 +15,6 @@ build.log
 *.ipynb
 !install.ipynb
 .ipynb_checkpoints/
+
+# Test 
+.coverage
