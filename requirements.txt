@@ -1,12 +1,12 @@
 # Distribution
-setuptools_scm
+setuptools_scm==8.1.0
 wheel
-twine
-pytest
+twine==5.1.1
+pytest==8.2.2
 
 # Usage
-numpy==1.19.3
-librosa
-soundfile
-matplotlib
-scikit-learn
+numpy==1.26.2
+librosa==0.10.1
+soundfile==0.12.1
+matplotlib==3.8.3
+scikit-learn==1.4.2
