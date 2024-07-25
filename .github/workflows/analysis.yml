@@ -1,4 +1,4 @@
-name: Publish to PyPI
+name: Analysis Pipeline
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: release
 
     steps:
       - name: Checkout code
@@ -31,5 +30,5 @@ jobs:
 
       - name: Run PyTest
         run: |
-          python -m pytest --cov=src --cov-report=html:test/htmlcov f--cov-fail-under=75 test/
+          python -m pytest --cov=src --cov-fail-under=75 test/
 
