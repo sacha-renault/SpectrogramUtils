@@ -40,3 +40,13 @@ class BadTypeException(SpectrogramUtilsException):
     """#### Thrown if trying to load a spectrogram from a wrong type
     """
     pass
+
+class BrokenProcessorException(SpectrogramUtilsException):
+    """#### Processor is broken and data pass through forward then backward are not retrieved
+    """
+    pass
+
+class ProcessorNotFittedException(SpectrogramUtilsException):
+    """#### Processor is not fitted before usage
+    """
+    pass

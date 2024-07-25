@@ -4,6 +4,8 @@ from typing import Union, Tuple, List
 import numpy as np
 import numpy.typing as npt
 
+from ..exceptions.lib_exceptions import BrokenProcessorException
+
 class AbstractDataProcessor(ABC):
     @abstractmethod
     def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
@@ -16,7 +18,6 @@ class AbstractDataProcessor(ABC):
         Returns:
             npt.NDArray[np.float64]: processed data
         """
-        ...
 
     @abstractmethod
     def backward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
@@ -28,14 +29,13 @@ class AbstractDataProcessor(ABC):
         Returns:
             npt.NDArray[np.float64]: deprocessed data
         """
-        ...
 
     def _check_reversible(self) -> None:
         rnd_data = np.random.rand(1,4,256,256)
         rnd_data_retrieval = self.backward(self.forward(rnd_data))
         err = np.mean(np.abs(rnd_data - rnd_data_retrieval))
         if rnd_data.shape != rnd_data_retrieval.shape or err > 1e-9:
-            raise Exception(f"The data processor doesn't retreive the data properly. Max err : {1e-15}, found : {err}. Considere using a AbstractDestructiveDataProcessor")
+            raise BrokenProcessorException(f"The data processor doesn't retreive the data properly. Max err : {1e-15}, found : {err}. Considere using a AbstractDestructiveDataProcessor")
 
 
 class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
@@ -57,7 +57,6 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         Args:
             file (Union[str, list[str]]): file or files to restaure a processor states. 
         """
-        ...
 
     @abstractmethod
     def fit(self, fit_data : np.ndarray) -> None:
@@ -66,7 +65,6 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         Args:
             fit_data (np.ndarray): training data
         """
-        ...
 
     @abstractmethod
     def save(self, file : Union[str, List[str]]) -> None:
@@ -75,11 +73,10 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         Args:
             file (Union[str, list[str]]): file or files to save a processor states. 
         """
-        ...
     
 
 class AbstractDestructiveDataProcessor(AbstractDataProcessor, ABC):
     """#### A data processor that doesn't have a backward pass
     """
     def backward(self, _) -> npt.NDArray[np.float64]:
-        raise Exception("Destructive Data Processor cannot backward")
+        raise BrokenProcessorException("Destructive Data Processor cannot backward")

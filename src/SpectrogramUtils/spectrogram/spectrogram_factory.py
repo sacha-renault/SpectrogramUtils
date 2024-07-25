@@ -126,24 +126,21 @@ class SpectrogramFactory:
             MultiSpectrogram: 
                 A MultiSpectrogram instance created from the given audio array.
         """
-        # Get the channel number
-        num_channels = audio_array.shape[0]
-
         # padding
         if self.__audio_padder is not None:
             audio_array = self.__audio_padder(audio_array, self.__config.audio_length)
 
         # If audio is mono, we can copy 
-        if num_channels == 1 and self.__config.num_channel > 1:
-            audio_array = np.stack([audio_array]*self.__config.num_channel, axis = 0)
+        if audio_array.shape[0] == 1 and self.__config.num_channel > 1:
+            audio_array = np.repeat(audio_array, self.__config.num_channel, axis = 0)
 
         # If number of channels and desired channel number fit, we can do stfts
-        if num_channels == self.__config.num_channel:
+        if audio_array.shape[0] == self.__config.num_channel:
             stfts = get_multi_stft(audio_array, **self.__config.get_istft_kwargs())
             return MultiSpectrogram.from_stfts(self.__config, self.__stft_processor, self.__processor, self.__ordering, *stfts)
         
         else:
-            raise WrongConfigurationException(f"Cannot handle data with {num_channels} channels. Configuration is set for {self.__config.num_channel} channels.")
+            raise WrongConfigurationException(f"Cannot handle data with {audio_array.shape[0]} channels. Configuration is set for {self.__config.num_channel} channels.")
         
     def get_spectrogram_from_path(self, file_path : str) -> MultiSpectrogram:
         """
@@ -259,12 +256,9 @@ class SpectrogramFactory:
             npt.NDArray[np.float64]: 
                 A numpy array containing the processed audio data.
         """
-        if self.__config.audio_length is None:
+        if self.__config.audio_length is None or self.__audio_padder is None:
             raise WrongConfigurationException("Cannot create a numpy dataset with no audio length provided. \n" + \
                             "Set the audio_length field in the configuration.")
-        if self.__audio_padder is None:
-            raise WrongConfigurationException("Cannot create a numpy dataset with no audio padding function provided. \n" + \
-                            "Set audio_padder argument in the factory constructor.")
 
         spectros = self.get_spectrograms_from_files(audio_or_file_list)
         X_data = np.zeros((len(spectros), *spectros[0].shape))
@@ -280,11 +274,19 @@ class SpectrogramFactory:
             >>> 
         """
         stft_config = self.__config.get_istft_kwargs()
-        audio_length = stft_config.get("audio_length")
-        window_length = stft_config.get("window_length")
+        audio_length = self.__config.audio_length
+        window_length = stft_config.get("win_length")
         hop_length = stft_config.get("hop_length")
         n_fft = stft_config.get("n_fft")
-        num_frames = (audio_length - window_length) // hop_length + 1
+        center = stft_config.get("center")
+
+        if None in [audio_length, window_length, hop_length, n_fft]:
+            raise ValueError("Missing required STFT configuration parameters.")
+        
+        if center:
+            num_frames = audio_length // hop_length + 1
+        else:
+            num_frames = (audio_length - window_length) // hop_length + 1
         num_frequency_bins = n_fft // 2 + 1
         return num_frequency_bins, num_frames
 
