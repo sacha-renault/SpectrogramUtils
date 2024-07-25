@@ -11,7 +11,7 @@ class RealImageStftProcessor(AbstractStftComplexProcessor):
         return data.shape[0] // 2
     
     def shape(self, input_stfts : List[npt.NDArray[np.complex128]]) -> Tuple:
-        return (2 * len(input_stfts), *input_stfts[0].shape)
+        return (2 * len(input_stfts), *(input_stfts[0].shape))
     
     def complexe_to_real(self, input_stft : npt.NDArray[np.complex128], 
         data : Union[npt.NDArray[np.float64], npt.NDArray[np.float32]],
