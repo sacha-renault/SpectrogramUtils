@@ -14,3 +14,4 @@ build.log
 # Exclude ipynb except some defined
 *.ipynb
 !install.ipynb
+.ipynb_checkpoints/
