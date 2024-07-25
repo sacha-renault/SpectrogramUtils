@@ -6,6 +6,10 @@ on:
       - 'release/*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,7 +37,6 @@ jobs:
         run: |
           python -m pytest
 
-      - name: Publish package to PyPI
-        run: |
-          twine upload dist/*
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
