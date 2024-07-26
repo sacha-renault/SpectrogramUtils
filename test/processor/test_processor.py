@@ -52,4 +52,4 @@ def test_broken_processor():
     
     processor = BrokenProcessor()
     with pytest.raises(BrokenProcessorException):
-        processor._check_reversible()
+        processor.check_reversible()

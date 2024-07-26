@@ -1,5 +1,6 @@
+""" Module that define base class for data processor"""
 from abc import ABC, abstractmethod
-from typing import Union, Tuple, List
+from typing import Union, List
 
 import numpy as np
 import numpy.typing as npt
@@ -7,10 +8,11 @@ import numpy.typing as npt
 from ..exceptions.lib_exceptions import BrokenProcessorException
 
 class AbstractDataProcessor(ABC):
+    """ Base class for data processor """
     @abstractmethod
     def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
-        """Preprocess datas, transformation must be reversible to get back to initial state in backward
-        (i.e. self.backward(self.forward(data)) must be same as data)
+        """Preprocess datas, transformation must be reversible to get back to initial state in 
+        backward (i.e. self.backward(self.forward(data)) must be same as data)
 
         Args:
             data (np.ndarray): single data
@@ -30,26 +32,30 @@ class AbstractDataProcessor(ABC):
             npt.NDArray[np.float64]: deprocessed data
         """
 
-    def _check_reversible(self) -> None:
+    def check_reversible(self) -> None:
         rnd_data = np.random.rand(1,4,256,256)
         rnd_data_retrieval = self.backward(self.forward(rnd_data))
         err = np.mean(np.abs(rnd_data - rnd_data_retrieval))
         if rnd_data.shape != rnd_data_retrieval.shape or err > 1e-9:
-            raise BrokenProcessorException(f"The data processor doesn't retreive the data properly. Max err : {1e-15}, found : {err}. Considere using a AbstractDestructiveDataProcessor")
+            raise BrokenProcessorException(f"\
+                The data processor doesn't retreive the data properly. Max err : {1e-15}, \
+                found : {err}. Considere using a AbstractDestructiveDataProcessor")
 
 
 class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
+    """ Base class for fit processor """
     def __init__(self) -> None:
         self.__is_fitted = False
 
     @property
     def is_fitted(self) -> bool:
+        """ Property that says if the processor is fitted"""
         return self.__is_fitted
-    
+
     @is_fitted.setter
     def is_fitted(self, value : bool):
         self.__is_fitted = value
-    
+
     @abstractmethod
     def load(self, file : Union[str, List[str]]) -> None:
         """Restaure the processor to a saved states, it should set is_fitted to True. 
@@ -73,7 +79,7 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         Args:
             file (Union[str, list[str]]): file or files to save a processor states. 
         """
-    
+
 
 class AbstractDestructiveDataProcessor(AbstractDataProcessor, ABC):
     """#### A data processor that doesn't have a backward pass
