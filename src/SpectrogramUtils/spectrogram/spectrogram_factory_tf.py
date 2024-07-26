@@ -16,7 +16,12 @@ except ImportError as e:
 from .spectrogram_factory import SpectrogramFactory
 
 class SpectrogramTfFactory(SpectrogramFactory):
-    def to_torch_dataset(self, 
+    @staticmethod
+    @property
+    def tf_available():
+        return TF_AVAILABLE
+    
+    def get_tf_dataset(self, 
                           audio_or_file_list : Union[List[Union[str, npt.NDArray[np.float64]]], List[MultiSpectrogram]], 
                           use_processor : bool
                           ) -> tf.Tensor:
@@ -42,5 +47,5 @@ class SpectrogramTfFactory(SpectrogramFactory):
             raise ImportError("torch is not available")
         
         data = self.get_numpy_dataset(audio_or_file_list, use_processor)
-        tensor = tf.Tensor(data)
+        tensor = tf.constant(data)
         return tensor

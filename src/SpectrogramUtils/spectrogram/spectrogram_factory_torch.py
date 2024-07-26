@@ -53,6 +53,10 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         else:
             return tensor
         
+    @staticmethod
+    @property
+    def torch_available():
+        return TORCH_AVAILABLE
 
     def _to_device(self, tensor : torch.Tensor, device_or_obj : Union[torch.device, str, Any]):
         device = self._get_device(device_or_obj)
@@ -116,7 +120,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
 
             Generating batches from a pre-loaded tensor:
             >>> tensor = torch.randn(100, 20)
-            >>> generator = factory.get_torch_dataset_batch_generator(tensor, use_processor=False, batch_size=10, device_or_obj='cuda')
+            >>> generator = factory.get_torch_dataset_batch_generator(tensor, batch_size=10, device_or_obj='cuda')
             >>> for batch in generator:
             >>>     print(batch)
         """
@@ -130,7 +134,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         # In the other cases, we let the tensor on device, and generator just provides one batch on target device at a time
         elif isinstance(file_list_or_tensor, torch.Tensor):
             if isinstance(use_processor, bool):
-                warnings.warn("use_processor will be ignore since the input datas are type torch.Tensor, that are supposed to be already processed")
+                warnings.warn("use_processor will be ignore since the input datas are type torch.Tensor, that are supposed to be already processed. Set to None to avoid getting warnings")
             return self._torch_generator_to_device(file_list_or_tensor, batch_size, device_or_obj, infinite_generator)
         
         else:
