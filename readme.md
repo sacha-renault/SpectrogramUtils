@@ -336,3 +336,24 @@ factory = SpectrogramFactory(config = config,
                 audio_padder = AudioPadding.CENTER_RCUT, 
                 ordering = ListOrdering.ALTERNATE)
 ```
+
+### f - Factory extension
+You can import factory extension to get tensorflow or torch dataset directly
+
+```python
+from SpectrogramUtils.extensions.tf import SpectrogramTfFactory
+from SpectrogramUtils.extensions.torch import SpectrogramTorchFactory
+
+# Instanciate the factories
+tf_factory = SpectrogramTfFactory(...)
+torch_factory = SpectrogramTorchFactory(...)
+
+# Load files, as audio arrays for example
+arrays = ...
+
+# Get dataset
+tf_dataset = tf_factory.get_tf_dataset(arrays, use_processor = True)
+torch_dataset = tf_factory.get_torch_dataset(arrays, use_processor = True, device = "cuda")
+
+# Torch extension also have method to get generator from file on disk or for preloaded tensor
+```
