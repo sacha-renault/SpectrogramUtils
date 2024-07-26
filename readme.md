@@ -119,7 +119,7 @@ processor = ScalerAudioProcessor(0.5, (0, 1)) # Target mean and min max
 ...
 
 # Create factory
-factory = SpectrogramFactory(config, processor = processor, audio_padder = AudioPadding.RPAD_RCUT)
+factory = SpectrogramFactory(config, data_processor = processor, audio_padder = AudioPadding.RPAD_RCUT)
 
 # Make a dataset of unprocessed datas
 unprocessed_data = factory.get_numpy_dataset(files, use_processor = False)
@@ -270,7 +270,7 @@ There is now 2 ListOrdering possible that you can set in SpectrogramFactory. It 
 ```python
 from SpectrogramUtils import ListOrdering
 
-factory = SpectrogramFactory(config, processor, AudioPadding.RPAD_RCUT, ListOrdering.AMPLITUDE_PHASE)
+factory = SpectrogramFactory(config, data_processor = processor, audio_padder = AudioPadding.RPAD_RCUT, ordering = ListOrdering.AMPLITUDE_PHASE)
 ```
 
 ### g - Extensions
