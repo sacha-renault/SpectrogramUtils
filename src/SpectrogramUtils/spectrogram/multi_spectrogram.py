@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional, Callable, Any
 
 import numpy as np
 import numpy.typing as npt
@@ -10,7 +10,7 @@ from ..data.data import DisplayType, ListOrdering
 from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
 from ..processors.wrapper import DataProcessorWrapper
-from ..exceptions.lib_exceptions import NoProcessorException, NoIndexException, WrongDisplayTypeException, UnknownWavTypeException
+from ..exceptions.lib_exceptions import NoProcessorException, NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, WrongConfigurationException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 
 class MultiSpectrogram:
@@ -242,19 +242,39 @@ class MultiSpectrogram:
             waves[i] = wave
         return waves
     
-    def save_as_file(self, file_name : str) -> None:
-        """save the file as wav
+    def save_as_file(self, file_name : str, normalize : bool = False, normalization_func : Optional[Callable[[npt.NDArray], npt.NDArray]] = None) -> None:
+        """ Save the file as wav
 
         Args:
             file_name (str): file name
+            normalize (bool, optional): if the audio has to be normalized between -1 and 1. Defaults to False.
+            normalization_func (Callable[[npt.NDArray], npt.NDArray], optional): USer functino to normalize the audio. Defaults to None.
 
         Raises:
             UnknownWavTypeException: Cannot save as wav file that has more than 2 channels. please call method 
             get_waves and setup a custom save function.
         """
+        # Only saving as a wav file
         if not file_name.endswith(".wav"):
             file_name += ".wav"
+
+        # Only saving mono or stereo. Use custom function to save more audio channels
         if self.num_stfts <=2:
-            sf.write(file_name, self.get_waves().transpose(), samplerate=self.__conf.sample_rate)
+            # Get the 1D audio array datas
+            data = self.get_waves()
+            
+            # If we need to normalize
+            if normalize and normalization_func is None:
+                data /= np.max(np.abs(data))
+
+            # Using custom function to normalize the volume final volume
+            elif normalization_func is not None and not normalize:
+                data = normalization_func(data)
+
+            elif normalization_func is not None and normalize:
+                raise WrongConfigurationException("Cannot provide both argument normalize and normalization_func at the same time.")
+
+            # Write the file 
+            sf.write(file_name, data.transpose(), samplerate=self.__conf.sample_rate)
         else:
             raise UnknownWavTypeException("Cannot save audio if it isn't mono or stereo")

@@ -1,5 +1,4 @@
-from typing import Callable, Union, Optional, List, Any
-from collections.abc import Iterable 
+from typing import Callable, Union, Optional, List, Any, Iterable
 import pickle
 import json
 import warnings
