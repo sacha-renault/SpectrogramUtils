@@ -1,9 +1,10 @@
+"""Types and Enum"""
 from enum import Enum, auto
-from typing import Callable
 
 from ..misc.utils import lpad_lcut, rpad_rcut, center_pad_rcut
 
 class DisplayType(Enum):
+    """ Enumerate type of display """
     # # # # # # #
     MEAN = auto()
     """Display the average bewteen left and right spectrogram"""
@@ -12,7 +13,7 @@ class DisplayType(Enum):
     STACK = auto()
     """Only available for wave display. \nDisplay all the waves in one graph."""
 
-    # 
+    # # # # # # #
     INDEX = auto()
     """Display the stft at specified index"""
 
@@ -20,11 +21,12 @@ class DisplayType(Enum):
     MAX = auto()
     """Display maximum value if more than one provided"""
 
-    # # # # # # # 
+    # # # # # # #
     MIN = auto()
     """Display minimum value if more than one provided"""
 
 class AudioPadding:
+    """ Store functions for padding """
     NONE = None
     """No padding at all"""
 
@@ -47,6 +49,7 @@ class AudioPadding:
     """
 
 class ListOrdering(Enum):
+    """ Enumerate types of list ordering """
     ALTERNATE = auto()
     """
         Altenate bewteen amplitude and phase. 

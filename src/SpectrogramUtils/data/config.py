@@ -1,6 +1,9 @@
+""" Configuration for the factory class """
 from .librosa_stft_args import LibrosaSTFTArgs
 
 class Config:
+    """Configuration for the factory class
+    """
     def __init__(self,
                  num_channel : int,
                  stft_config : LibrosaSTFTArgs = None,
@@ -18,13 +21,17 @@ class Config:
             assert power_to_db_intensity > 0
         if stft_config is not None:
             assert isinstance(stft_config, LibrosaSTFTArgs)
-        
+
         # Set attribute
         self.audio_length = audio_length
         self.num_channel = num_channel
         self.sample_rate = sample_rate
         self.power_to_db_intensity = power_to_db_intensity
-        self.stft_config = stft_config if stft_config is not None else LibrosaSTFTArgs() # default values
+        self.stft_config = stft_config \
+            if stft_config is not None else LibrosaSTFTArgs() # default values
 
     def get_istft_kwargs(self) -> dict:
+        """Return the dict representing kwargs for stft
+        """
         return self.stft_config
+    

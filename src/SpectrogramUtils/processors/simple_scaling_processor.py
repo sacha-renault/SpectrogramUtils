@@ -1,8 +1,6 @@
-from typing import Generator, Union, Tuple
-
+""" Module that define SimpleScalingProcessor"""
 import numpy as np
 from numpy._typing import NDArray
-import numpy.typing as npt
 
 from .abstract_data_processor import AbstractDataProcessor
 

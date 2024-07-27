@@ -1,5 +1,6 @@
-from typing import Callable, Union, Optional, List, Any
-from collections.abc import Iterable 
+""" Module where the factory is defined """
+from __future__ import annotations
+from typing import Callable, Union, Optional, List, Iterable
 import pickle
 import json
 import warnings
@@ -22,7 +23,8 @@ from .._version import version as __version__
 
 
 class SpectrogramFactory:
-    def __init__(self, 
+    """ Base factory class """
+    def __init__(self,
                 config : Config,
                 stft_processor : Optional[AbstractStftComplexProcessor] = None,
                 data_processor : Optional[AbstractDataProcessor] = None,
@@ -34,11 +36,13 @@ class SpectrogramFactory:
         self.__config = config
 
         # Set the data processor
-        assert stft_processor is None or isinstance(stft_processor, AbstractStftComplexProcessor), f"stft_processor must be None or AbstractStftComplexProcessor, not {type(stft_processor)}"
+        assert stft_processor is None or isinstance(stft_processor, AbstractStftComplexProcessor),\
+          f"stft_processor must be None or AbstractStftComplexProcessor, not {type(stft_processor)}"
         self.__stft_processor = stft_processor if stft_processor is not None else RealImageStftProcessor()
 
         # Set the data processor
-        assert data_processor is None or isinstance(data_processor, (AbstractDataProcessor, DataProcessorWrapper)), f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
+        assert data_processor is None or isinstance(data_processor, (AbstractDataProcessor, DataProcessorWrapper)),\
+            f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
         self.__processor = data_processor if isinstance(data_processor, DataProcessorWrapper) else DataProcessorWrapper(data_processor)
 
         # Set the padding functino
@@ -53,40 +57,59 @@ class SpectrogramFactory:
         if (self.__audio_padder is not None and self.__config.audio_length is None) or \
             (self.__audio_padder is None and self.__config.audio_length is not None):
             raise WrongConfigurationException("audio_padder and audio_length (in config object) must be either both set or both None")
-        
+
     def save(self, save_dir : str):
+        """Save the factory
+
+        Args:
+            - save_dir (str): [description]
+
+        Raises:
+            - NotADirectoryError: Cannot create a new directory to store datas
+            - FileExistsError: Save dir already exist (no override policy)
+        """
         # Check if dir exist
         if not os.path.isdir(os.path.dirname(save_dir)) and not os.path.dirname(save_dir) == "":
             raise NotADirectoryError(f"The directory doesn't exist : {os.path.dirname(save_dir)}")
-        
+
         # check if dir already exist
-        elif os.path.isdir(save_dir):
+        if os.path.isdir(save_dir):
             raise FileExistsError("Directory already exist, delete it or choose an other name")
-        
+
         # else save
-        else:
-            os.mkdir(save_dir)
-            spath = lambda x : os.path.normpath(os.path.join(save_dir, x +".pkl"))
-            with open(spath("data_processor"), "wb") as file:
-                pickle.dump(self.__processor, file)
-            with open(spath("stft_processor"), "wb") as file:
-                pickle.dump(self.__stft_processor, file)
-            with open(spath("ordering"), "wb") as file:
-                pickle.dump(self.__ordering, file)
-            with open(spath("config"), "wb") as file:
-                pickle.dump(self.__config, file)
-            with open(spath("audio_padder"), "wb") as file:
-                pickle.dump(self.__audio_padder, file)
-            with open(os.path.join(save_dir, "config.json"), "w") as file:
-                json.dump({"version" : __version__}, file)
+        os.mkdir(save_dir)
+        spath = lambda x : os.path.normpath(os.path.join(save_dir, x +".pkl"))
+        with open(spath("data_processor"), "wb") as file:
+            pickle.dump(self.__processor, file)
+        with open(spath("stft_processor"), "wb") as file:
+            pickle.dump(self.__stft_processor, file)
+        with open(spath("ordering"), "wb") as file:
+            pickle.dump(self.__ordering, file)
+        with open(spath("config"), "wb") as file:
+            pickle.dump(self.__config, file)
+        with open(spath("audio_padder"), "wb") as file:
+            pickle.dump(self.__audio_padder, file)
+        with open(os.path.join(save_dir, "config.json"), "w") as file:
+            json.dump({"version" : __version__}, file)
 
     @classmethod
-    def from_file(cls, load_dir : str):
+    def from_file(cls, load_dir : str) -> SpectrogramFactory:
+        """Load a factory from saved files
+
+        Args:
+            - load_dir (str): Directory where facotry was saved
+
+        Raises:
+            - NotADirectoryError: File wasn't found
+
+        Returns:
+            - SpectrogramFactory: the saved factory
+        """
         if not os.path.isdir(load_dir):
             raise NotADirectoryError(f"The directory doesn't exist: {load_dir}")
-        
+
         spath = lambda x: os.path.normpath(os.path.join(load_dir, x + ".pkl"))
-        
+
         with open(os.path.join(load_dir, "config.json")) as file:
             json_config : dict = json.load(file)
             if json_config.get("version", "0.0.0") != __version__:
@@ -103,9 +126,10 @@ class SpectrogramFactory:
             audio_padder = pickle.load(file)
 
         return cls(config, stft_processor, data_processor, audio_padder, ordering)
-        
+
     @property
     def num_channel(self) -> int:
+        """ Number of audio channel configured"""
         return self.__config.num_channel
 
     def get_spectrogram_from_audio(self, audio_array : np.ndarray) -> MultiSpectrogram:
@@ -261,11 +285,11 @@ class SpectrogramFactory:
                             "Set the audio_length field in the configuration.")
 
         spectros = self.get_spectrograms_from_files(audio_or_file_list)
-        X_data = np.zeros((len(spectros), *spectros[0].shape))
+        x_data = np.zeros((len(spectros), *spectros[0].shape))
         for i, spec in enumerate(spectros):
-            X_data[i] = spec.to_rearanged_data(use_processor)
-        return X_data
-    
+            x_data[i] = spec.to_rearanged_data(use_processor)
+        return x_data
+
     def _get_stft_shape(self):
         """#### Return the shape that a stft would have 
 
@@ -282,13 +306,12 @@ class SpectrogramFactory:
 
         if None in [audio_length, window_length, hop_length, n_fft]:
             raise ValueError("Missing required STFT configuration parameters.")
-        
+
         if center:
             num_frames = audio_length // hop_length + 1
         else:
             num_frames = (audio_length - window_length) // hop_length + 1
         num_frequency_bins = n_fft // 2 + 1
         return num_frequency_bins, num_frames
-
 
     
