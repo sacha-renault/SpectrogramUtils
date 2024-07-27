@@ -101,6 +101,55 @@ def test_save_as_file():
         with pytest.raises(UnknownWavTypeException, match="Cannot save audio if it isn't mono or stereo"):
             n_spec.save_as_file("test_audio")
 
+def test_save_as_file_fails1():
+        config = Config(1)
+        stft_processor = RealImageStftProcessor()
+        data_processor = DataProcessorWrapper(None)
+        data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
+        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+        spec.get_waves = MagicMock(return_value=array)
+        spec.__conf = MagicMock()
+        spec.__conf.sample_rate = 44100
+        with patch('soundfile.write') as mock_sf_write:
+            with pytest.raises(WrongConfigurationException):
+                spec.save_as_file("test_audio", True, lambda x : x)
+            assert not mock_sf_write.called
+
+def test_save_as_file_success_ext():
+        config = Config(1)
+        stft_processor = RealImageStftProcessor()
+        data_processor = DataProcessorWrapper(None)
+        data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
+        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+        spec.get_waves = MagicMock(return_value=array)
+        spec.__conf = MagicMock()
+        spec.__conf.sample_rate = 44100
+        with patch('soundfile.write') as mock_sf_write:
+            spec.save_as_file("test_audio", True)
+        assert mock_sf_write.called
+        args, kwargs = mock_sf_write.call_args
+        assert np.array_equal(args[1], array.transpose() / np.max(np.abs(array)))
+        assert kwargs['samplerate'] == 44100
+
+def test_save_as_file_success_ext_2():
+        config = Config(1)
+        stft_processor = RealImageStftProcessor()
+        data_processor = DataProcessorWrapper(None)
+        data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
+        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+        spec.get_waves = MagicMock(return_value=array)
+        spec.__conf = MagicMock()
+        spec.__conf.sample_rate = 44100
+        with patch('soundfile.write') as mock_sf_write:
+            spec.save_as_file("test_audio", normalization_func=lambda x : 2*x)
+        assert mock_sf_write.called
+        args, kwargs = mock_sf_write.call_args
+        assert np.array_equal(args[1], array.transpose() * 2)
+        assert kwargs['samplerate'] == 44100
+
 def test_show_image():
     config = Config(1)
     stft_processor = RealImageStftProcessor()

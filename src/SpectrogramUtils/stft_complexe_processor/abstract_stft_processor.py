@@ -9,14 +9,12 @@ class AbstractStftComplexProcessor(ABC):
     def num_stfts(self, data : npt.NDArray) -> int:
         """[summary] get the number of stft from data shape
         """
-        ...
 
 
     @abstractmethod
     def shape(self, input_stfts : List[npt.NDArray[np.complex128]]) -> Tuple:
         """[summary] return the shape the the stored data should have
         """
-        ...
 
     @abstractmethod
     def complexe_to_real(self, 
@@ -25,7 +23,6 @@ class AbstractStftComplexProcessor(ABC):
         index : int) -> None:
         """[summary] transform the stft into real value and store it into data
         """
-        ...
 
     @abstractmethod
     def real_to_complexe(self, 
@@ -33,4 +30,3 @@ class AbstractStftComplexProcessor(ABC):
         index : int) -> npt.NDArray[np.float64]:
         """[summary] transform the stft into complexe value and return a single stft
         """
-        ...

@@ -1,10 +1,13 @@
 import pytest
 from unittest.mock import Mock, MagicMock, patch, mock_open
+import json
+import pickle
 
 import numpy as np
 import librosa 
 
-from src.SpectrogramUtils import SpectrogramFactory, Config, ScalerAudioProcessor, AudioPadding, SimpleScalingProcessor, LibrosaSTFTArgs, ListOrdering, MultiSpectrogram
+from src.SpectrogramUtils import SpectrogramFactory, Config, ScalerAudioProcessor, AudioPadding, \
+    SimpleScalingProcessor, LibrosaSTFTArgs, ListOrdering, MultiSpectrogram, RealImageStftProcessor
 from src.SpectrogramUtils.exceptions.lib_exceptions import WrongConfigurationException,BadTypeException
 from src.SpectrogramUtils._version import version as __version__
 
@@ -132,13 +135,69 @@ def test_factory_save():
             assert open_mock.call_count == 6
             assert mkdir_mock.call_count == 1
 
-# def test_factory_load():
-#     mock_file_contents = [f"{{\"version\" : {__version__}}}", "data2", "data3", "data4", "data5", "data6"]
-#     mock_file_iter = iter([bytes(content, 'utf-8') for content in mock_file_contents])
-#     with patch('src.SpectrogramUtils.spectrogram.spectrogram_factory.open', mock_open(), create=True) as open_mock:
-#         with patch("os.path.isdir") as isdir_mock:
-#             open_mock.return_value.read.side_effect = lambda: next(mock_file_iter)
-#             factory = SpectrogramFactory.from_file("save_dir")
-#             assert open_mock.call_count == 6
-#             assert isdir_mock.call_count == 1
+def test_factory_load():
+    mock_file_contents = [
+        bytes(json.dumps({"version": __version__}), 'utf-8'), 
+        pickle.dumps(SimpleScalingProcessor(1,1,0)), 
+        pickle.dumps(RealImageStftProcessor()), 
+        pickle.dumps(ListOrdering.ALTERNATE), 
+        pickle.dumps(Config(2, audio_length=5000)), 
+        pickle.dumps(AudioPadding.CENTER_RCUT)
+    ]
+    mock_file_iter = iter(mock_file_contents)
 
+    with patch('src.SpectrogramUtils.spectrogram.spectrogram_factory.open', mock_open(), create=True) as open_mock:
+        with patch("os.path.isdir", return_value=True) as isdir_mock:
+            open_mock.return_value.read.side_effect = lambda *args, **kwargs: next(mock_file_iter)
+            factory = SpectrogramFactory.from_file("save_dir")
+            assert open_mock.call_count == 6
+            assert isdir_mock.call_count == 1
+
+def test_factory_load_not_good_version():
+    mock_file_contents = [
+        bytes(json.dumps({"version": "pas la bonne version"}), 'utf-8'), 
+        pickle.dumps(SimpleScalingProcessor(1,1,0)), 
+        pickle.dumps(RealImageStftProcessor()), 
+        pickle.dumps(ListOrdering.ALTERNATE), 
+        pickle.dumps(Config(2, audio_length=5000)), 
+        pickle.dumps(AudioPadding.CENTER_RCUT)
+    ]
+    mock_file_iter = iter(mock_file_contents)
+
+    with patch('src.SpectrogramUtils.spectrogram.spectrogram_factory.open', mock_open(), create=True) as open_mock:
+        with patch("os.path.isdir", return_value=True) as isdir_mock:
+            with pytest.warns(match="Found factory saved on version*"):
+                open_mock.return_value.read.side_effect = lambda *args, **kwargs: next(mock_file_iter)
+                factory = SpectrogramFactory.from_file("save_dir")
+                assert open_mock.call_count == 6
+                assert isdir_mock.call_count == 1
+
+def test_factory_load_not_a_dir():
+    with patch("os.path.isdir", return_value=False) as isdir_mock:
+        with pytest.raises(NotADirectoryError):
+            factory = SpectrogramFactory.from_file("save_dir")
+
+def test_factory_save_not_a_dir():
+    stft_config = LibrosaSTFTArgs(center=False)
+    config = Config(1, audio_length=5000, stft_config=stft_config)
+    factory = SpectrogramFactory(config, data_processor=None, audio_padder=AudioPadding.CENTER_RCUT)
+    with patch("os.mkdir") as mkdir_patch:
+        with patch("os.path.isdir", return_value=False) as isdir_mock:
+            with patch("os.path.dirname", return_value="123"):
+                with pytest.raises(NotADirectoryError, match = "The directory doesn't exist :*"):
+                    factory.save("save_dir")
+                    assert not mkdir_patch.called 
+                    assert isdir_mock.call_count == 1
+
+def test_factory_save_not_a_file():
+    stft_config = LibrosaSTFTArgs(center=False)
+    config = Config(1, audio_length=5000, stft_config=stft_config)
+    factory = SpectrogramFactory(config, data_processor=None, audio_padder=AudioPadding.CENTER_RCUT)
+    values = iter([False, True])
+    with patch("os.mkdir") as mkdir_patch:
+        with patch("os.path.isdir") as isdir_mock:
+            with patch("os.path.dirname", return_value=""):
+                with pytest.raises(FileExistsError):
+                    isdir_mock.return_value.read.side_effect = lambda : next(values)
+                    factory.save("save_dir")
+                    assert not mkdir_patch.called 
