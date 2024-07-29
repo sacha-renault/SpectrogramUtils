@@ -7,54 +7,26 @@ import numpy.typing as npt
 
 from ..exceptions.lib_exceptions import UnknownStftShapeException
 
-# def get_square_stft_pairs_by_audio_length(audio_len: int) -> list:
-#     pairs = []
-#
-#     # Iterate over possible hop lengths
-#     for hop_length in range(1, min(audio_len, 500)):
-#         num_time_bins = audio_len // hop_length
-#
-#         # Calculate nfft such that the number of frequency bins equals the number of time bins
-#         nfft = (num_time_bins - 1) * 2
-#
-#         # Ensure nfft is a valid value
-#         if nfft > 0:
-#             # Find the closest power of 2 greater than or equal to this value
-#             nfft_power_of_2 = 2**np.ceil(np.log2(nfft)).astype(int)
-#
-#             # Calculate the number of frequency bins
-#             num_freq_bins = nfft_power_of_2 // 2 + 1
-#
-#             # Check if the STFT will be square
-#             if num_freq_bins == num_time_bins:
-#                 # Add the (hop_length, nfft, shape) tuple to the list
-#                 pairs.append((hop_length, nfft_power_of_2, (num_freq_bins, num_time_bins)))
-#
-#     return pairs
-#
-# def get_values_for_stft_shape(desired_stft_shape: Tuple[int, int]) -> list:
-#     desired_num_freq_bins, desired_num_time_bins = desired_stft_shape
-#
-#     # Calculate the required nfft to achieve the desired number of frequency bins
-#     nfft = (desired_num_freq_bins - 1) * 2 - 5
-#
-#     # Ensure nfft is a power of 2 for optimal FFT computation
-#     nfft_power_of_2 = 2**np.ceil(np.log2(nfft)).astype(int)
-#
-#     possible_values = []
-#
-#     # Iterate over possible hop lengths to find audio lengths
-#     for hop_length in range(1, 500):  # Adjust the range if needed
-#         # Calculate the resulting audio length that would give the desired number of time bins
-#         audio_len = hop_length * (desired_num_time_bins - 1)
-#
-#         # Add the (hop_length, nfft, audio_len) tuple to the list
-#         possible_values.append((hop_length, nfft_power_of_2, audio_len, (desired_num_freq_bins, desired_num_time_bins)))
-#
-#     # Sort the list by audio length
-#     possible_values.sort(key=lambda x: x[2])
-#
-#     return possible_values
+def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[np.int_]: 
+    """For a given forward indexer, check it is valid and get it's backward indexing
+
+    Args:
+        forward_indexer (npt.NDArray[np.int_]): forward_indexer for ListOrdering
+
+    Returns:
+        npt.NDArray[np.int_]: the backward indexer
+    """
+    # Assert the indexer is 1D array 
+    assert len(forward_indexer.shape) == 1,\
+        f"forward_indexer should be a 1D array, found shape dimension: {len(forward_indexer.shape)}"
+
+    # Check that forward_indexer is an arangement
+    sorted_indexer = np.sort(forward_indexer)
+    aranged_indexer = np.arange(forward_indexer.shape[0])
+    assert np.array_equal(aranged_indexer, sorted_indexer), "The indexer isn't an arrangement"
+
+    # get the backward_indexer
+    return np.argsort(forward_indexer)
 
 def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> List[np.ndarray]:
     """ Get stft(s) with librosa"""
