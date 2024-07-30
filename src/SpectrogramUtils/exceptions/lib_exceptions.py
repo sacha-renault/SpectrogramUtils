@@ -2,6 +2,7 @@
 
 class SpectrogramUtilsException(Exception):
     """ Base exception for library """
+
 class UnknownStftShapeException(SpectrogramUtilsException):
     """#### Thrown if stft process create bad shaped stfts
     """
@@ -27,7 +28,8 @@ class WrongConfigurationException(SpectrogramUtilsException):
     """
 
 class UnknownWavTypeException(SpectrogramUtilsException):
-    """#### Thrown if trying to save to wav a file that has more than 2 channels, try to use custom save method after calling method get_waves()
+    """#### Thrown if trying to save to wav a file that has more than 2 channels.
+    Try to use custom save method after calling method get_waves()
     """
 
 class BadTypeException(SpectrogramUtilsException):
@@ -40,4 +42,12 @@ class BrokenProcessorException(SpectrogramUtilsException):
 
 class ProcessorNotFittedException(SpectrogramUtilsException):
     """#### Processor is not fitted before usage
+    """
+
+class IndexShapeNotMatchingExeption(SpectrogramUtilsException):
+    """#### Shape of the indexer doesn't match with the datas
+    """
+
+class VersionNotCompatibleException(SpectrogramUtilsException):
+    """#### Versions aren't compatible
     """

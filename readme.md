@@ -146,15 +146,15 @@ Data processor must inheritate from either AbstractFitDataProcessor or AbstractD
 
 ```python
 class YourDataProcessor(AbstractDataProcessor):
-    def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+    def forward(self, data : MixedPrecisionArray) -> MixedPrecisionArray:
         """#### Preprocess datas, transformation must be reversible to get back to initial state in backward
         (i.e. self.backward(self.forward(data)) must be same as data)
 
         #### Args:
-            - data (np.ndarray): single data
+            - data (MixedPrecisionArray): single data
 
         #### Returns:
-            - npt.NDArray[np.float64]: processed data
+            - npt.NDArray[MixedPrecisionArray]: processed data
         """
         # TODO
 
@@ -260,17 +260,19 @@ for i, spectrogram in enumerate(output_spectrograms):
     spectrogram.save_as_file(f"output/<model_name>_{i+1}.wav")
 ```
 
-### f - List ordering
+### f - Indexers
 
-There is now 2 ListOrdering possible that you can set in SpectrogramFactory. It allows to change the order amplitude and phase. When the datas are passed from a list of complexe 2D array to a float 3D array, it set the amplitude every 2\*n, and phase every 2\*n + 1. For a 3 channel audio, we would have [A1, P1, A2, P2, A3, P3] (An and Pn being Amplitude and Phase of channel n).
-
-- ListOrdering.ALTERNATE (default) : this is the default ordering, it let the normal order : [A1, P1, ..., An, Pn].
-- ListOrdering.AMPLITUDE_PHASE : when calling get_numpy_dataset, it change the order to : [A1, ..., An, P1, ..., Pn]. It rearange to normal order when calling get_spectrogram_from_model_output. (Spectrogram always store as ALTERNATE order, ListOrdering just allows to have the desired order in the dataset)
+Indexers allows to change the order amplitude and phase. When the datas are passed from a list of complexe 2D array to a float 3D array, it set the amplitude every 2\*n, and phase every 2\*n + 1. For a 3 channel audio, we would have [A1, P1, A2, P2, A3, P3] (An and Pn being Amplitude and Phase of channel n).
+You can set a new indexer, it must follow those rules : 
+- must be a 1D int array.
+- must be equivalent to an arangement when sorted.
+- the dimension at axis 0 must be equal to dimension at axis 0 of the result of AbstractStftComplexProcessor.
 
 ```python
-from SpectrogramUtils import ListOrdering
+from SpectrogramUtils.misc.utils import get_forward_indexer_amplitude_phase
 
-factory = SpectrogramFactory(config, data_processor = processor, audio_padder = AudioPadding.RPAD_RCUT, ordering = ListOrdering.AMPLITUDE_PHASE)
+indexer = get_forward_indexer_amplitude_phase(3, 2) # example for 3 channel in the audio and StftProcessor produce 2 array per channel.
+factory = SpectrogramFactory(config, data_processor = processor, audio_padder = AudioPadding.RPAD_RCUT, forward_indexer = indexer)
 ```
 
 ### g - Extensions
@@ -334,7 +336,7 @@ factory = SpectrogramFactory(config = config,
                 stft_processor = stft_processor,
                 data_processor = data_processor,
                 audio_padder = AudioPadding.CENTER_RCUT, 
-                ordering = ListOrdering.ALTERNATE)
+                forward_indexer = None) # None is no reindexing
 ```
 
 ### f - Factory extension

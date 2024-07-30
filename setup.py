@@ -5,7 +5,8 @@ from setuptools_scm import get_version
 def write_version_file():
     version = get_version()
     with open('src/SpectrogramUtils/_version.py', 'w') as f:
-        f.write(f"version = '{version}'\n")
+        docstring = '""" version of package """'
+        f.write(f"{docstring}\nVERSION = '{version}'\n")
 
 if __name__ == "__main__":
     write_version_file()

@@ -34,4 +34,3 @@ class Config:
         """Return the dict representing kwargs for stft
         """
         return self.stft_config
-    

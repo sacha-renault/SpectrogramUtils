@@ -1,20 +1,22 @@
 """ Module that define the MultiSpectrogram class"""
 from __future__ import annotations
-from typing import Union, Optional, Callable
+from typing import Union, Optional, Callable, List
 
 import numpy as np
-import numpy.typing as npt
 import librosa
 import soundfile as sf
 from matplotlib.axes import Axes
 
-from ..data.data import DisplayType, ListOrdering
+from ..data.data import DisplayType
 from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
 from ..processors.wrapper import DataProcessorWrapper
 from ..exceptions.lib_exceptions import NoProcessorException, \
-    NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, WrongConfigurationException
+    NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, \
+    WrongConfigurationException, IndexShapeNotMatchingExeption
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
+from ..data.types import MixedPrecision2DArray, Complex2DArray, \
+    Complex3DArray, ArangementPermutation
 
 class MultiSpectrogram:
     """Store data from mutliple stft as real array.
@@ -24,14 +26,15 @@ class MultiSpectrogram:
                    config : Config,
                    stft_processor : AbstractStftComplexProcessor,
                    processor : AbstractDataProcessor,
-                   ordering : ListOrdering,
-                   *stfts : np.ndarray) -> MultiSpectrogram:
+                   forward_indexer : ArangementPermutation,
+                   stfts : List[Complex2DArray]) -> MultiSpectrogram:
         """Same as normal constructor, but stfts are process from complexe array to real arrays
         Args:
             - config (Config): configuration provided by the factory
             - stft_processor (AbstractStftComplexProcessor): stft processor, provided by the factory
             - processor (AbstractDataProcessor): data processor, provided by the factory
-            - ordering (ListOrdering): ordering, provided by the factory
+            - ordering (ArangementPermutation): ordering, provided by the factory
+            - stfts (List[Complex2DArray]): a list of stfts, one per channel
         """
         # assert same shape
         assert all(stft.shape == stfts[0].shape for stft in stfts), \
@@ -42,23 +45,23 @@ class MultiSpectrogram:
         for i, stft in enumerate(stfts):
             stft_processor.complexe_to_real(stft, data, i)
 
-        # Instanciate the class with the multi spectro 
-        return cls(config, stft_processor, processor, ordering, data)
+        # Instanciate the class with the multi spectro
+        return cls(config, stft_processor, processor, forward_indexer, data)
 
     def __init__(self,
                 config : Config,
                 stft_processor : AbstractStftComplexProcessor,
                 processor : DataProcessorWrapper,
-                ordering : ListOrdering,
+                forward_indexer : ArangementPermutation,
                 data : np.ndarray) -> None:
         # define config
         assert isinstance(config, Config), f"config must be a Config object, not {type(config)}"
         self.__conf = config
 
         # define config
-        assert isinstance(stft_processor, AbstractStftComplexProcessor), \
-            f"stft_processor must be a AbstractStftComplexProcessor object,\
-            not {type(stft_processor)}"
+        assert isinstance(stft_processor, AbstractStftComplexProcessor), (
+            f"stft_processor must be a AbstractStftComplexProcessor object, "
+            f"not {type(stft_processor)}")
         self.__stft_processor = stft_processor
 
         # Set processor
@@ -67,16 +70,14 @@ class MultiSpectrogram:
 
         # define data
         assert isinstance(data, np.ndarray), f"data must be a NDArray object, not {type(data)}"
-        assert data.dtype == np.float64 or data.dtype == np.float32,\
+        assert data.dtype in (np.float64, np.float32),\
             f"data type must be float64 or float32, not {data.dtype}"
         self.__data = data
 
         # Define ordering
-        assert isinstance(ordering, ListOrdering),\
-            f"ordering must be a ListOrdering object, not {type(data)}"
-        self.__ordering = ordering
+        self.__forward_indexer = forward_indexer
 
-    def to_data(self, process_data : bool = False) -> npt.NDArray[np.float64]:
+    def to_data(self, process_data : bool = False) -> MixedPrecision2DArray:
         """return a stereo spectrogram. Indexes precisions :
         - 2*n : amplitude of stft at index n
         - 2*n + 1 : phase of stft at index n
@@ -108,16 +109,20 @@ class MultiSpectrogram:
             np.ndarray: multi spectrogram
         """
         data = self.to_data(process_data)
-        if self.__ordering == ListOrdering.AMPLITUDE_PHASE:
-            # Rearange the order of the amplitudes and phases
-            data = np.concatenate((data[::2], data[1::2]), axis = 0)
+        if self.__forward_indexer is not None:
+            if self.__forward_indexer.shape[0] == data.shape[0]:
+                data = data[self.__forward_indexer] # Rearange the data in correct order
+            else:
+                raise IndexShapeNotMatchingExeption(
+                    f"backward indexer dimension 0 isn't equal to data dim 0,"
+                    f"found {self.__forward_indexer.shape[0]} and {data.shape[0]}")
         return data
 
     @property
-    def ordering(self) -> ListOrdering:
+    def forward_indexer(self) -> ArangementPermutation:
         """Return the list ordering set for this spectrogram
         """
-        return self.__ordering
+        return self.__forward_indexer
 
     @property
     def num_stfts(self) -> int:
@@ -133,19 +138,19 @@ class MultiSpectrogram:
 
     def show_image_on_axis(self,
                            axis : Axes,
+                           *axes_args,
                            display_type : DisplayType = DisplayType.MEAN,
                            index : Union[int, None] = None,
                            use_processor : bool = False,
-                           *axes_args,
                            **axes_kwargs) -> None:
-        """Show the stft on the given axis 
+        """Show the stft on the given axis
             (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
 
         Args:
             axis (axes.Axes): Axis to display the stereo spectrogram
-            display_type (DisplayType, optional): 
+            display_type (DisplayType, optional):
                 How to display the stereo spectrogram. Defaults to DisplayType.MEAN.
-            
+
         Raises:
             NoIndexException: DisplayType is INDEX but no index provided
             WrongDisplayTypeException: this DisplayType isn't handled for this method
@@ -172,7 +177,7 @@ class MultiSpectrogram:
             display_data += np.min(data, axis = 0)
 
         else:
-            raise WrongDisplayTypeException(\
+            raise WrongDisplayTypeException(
                 f"Cannot use display type {display_type.name} for image display")
 
         if self.__conf.power_to_db_intensity is not None:
@@ -187,15 +192,15 @@ class MultiSpectrogram:
 
     def show_wave_on_axis(self,
                           axis : Axes,
+                          *axes_args,
                           display_type : DisplayType = DisplayType.STACK,
                           index : Union[int, None] = None,
-                          *axes_args,
                           **axes_kwargs) -> None:
-        """Show the wave shape on a given axis 
+        """Show the wave shape on a given axis
 
         Args:
             axis (axes.Axes): Axis to display the stereo spectrogram
-            display_type (DisplayType, optional): 
+            display_type (DisplayType, optional):
                 How to display the wave. Defaults to DisplayType.STACK.
 
         Raises:
@@ -205,7 +210,7 @@ class MultiSpectrogram:
         axis.set_xlabel('Time')
         axis.set_ylabel('Amplitude')
         if display_type == DisplayType.STACK:
-            axis.plot(self.get_waves().transpose(), *axes_args, **axes_kwargs)            
+            axis.plot(self.get_waves().transpose(), *axes_args, **axes_kwargs)
 
         elif display_type == DisplayType.MEAN:
             waves = self.get_waves()
@@ -220,10 +225,10 @@ class MultiSpectrogram:
                 raise NoIndexException("Can't display index if no index is provided")
 
         else:
-            raise WrongDisplayTypeException(\
+            raise WrongDisplayTypeException(
                 f"Cannot use display type {display_type.name} for image display")
 
-    def get_stft(self, index : int, use_processor : bool = False) -> npt.NDArray[np.complex128]:
+    def get_stft(self, index : int, use_processor : bool = False) -> Complex2DArray:
         """Get a stft at a specified index
 
         Args:
@@ -235,7 +240,7 @@ class MultiSpectrogram:
         data = self.to_data(use_processor)
         return self.__stft_processor.real_to_complexe(data, index)
 
-    def get_stfts(self, use_processor : bool = False) -> npt.NDArray[np.complex128]:
+    def get_stfts(self, use_processor : bool = False) -> Complex3DArray:
         """Get all the stfts of the multispectrogram as a complex array
 
         Args:
@@ -249,7 +254,7 @@ class MultiSpectrogram:
             stfts[i] = self.get_stft(i, use_processor)
         return stfts
 
-    def get_wave(self, index : int) -> npt.NDArray[np.float64]:
+    def get_wave(self, index : int) -> Complex2DArray:
         """Get the wave shape for the channel at the requested index
 
         Args:
@@ -262,36 +267,36 @@ class MultiSpectrogram:
         wave = librosa.istft(stft, **self.__conf.get_istft_kwargs())
         return wave
 
-    def get_waves(self) -> npt.NDArray[np.float64]:
+    def get_waves(self) -> Complex2DArray:
         """Get the wave shape for all channels
 
         Returns:
             np.ndarray: n-Dimentional wave shape
         """
         waves = None
-        for i in range(self.num_stfts): 
+        for i in range(self.num_stfts):
             wave = self.get_wave(i)
             if waves is None:
                 waves = np.zeros(shape=(self.num_stfts, *wave.shape))
             waves[i] = wave
         return waves
 
-    def save_as_file(self, 
+    def save_as_file(self,
                     file_name : str,
                     normalize : bool = False,
-                    normalization_func : Optional[Callable[[npt.NDArray], npt.NDArray]] = None
+                    normalization_func : Optional[Callable[[Complex2DArray], Complex2DArray]] = None
                     ) -> None:
         """ Save the file as wav
 
         Args:
             file_name (str): file name
-            normalize (bool, optional): 
+            normalize (bool, optional):
                 if the audio has to be normalized between -1 and 1. Defaults to False.
-            normalization_func (Callable[[npt.NDArray], npt.NDArray], optional): 
+            normalization_func (Callable[[Complex2DArray], Complex2DArray], optional):
                 User functino to normalize the audio. Defaults to None.
 
         Raises:
-            UnknownWavTypeException: 
+            UnknownWavTypeException:
                 Cannot save as wav file that has more than 2 channels. Call method
                 get_waves and setup a custom save function.
         """
@@ -313,7 +318,7 @@ class MultiSpectrogram:
                 data = normalization_func(data)
 
             elif normalization_func is not None and normalize:
-                raise WrongConfigurationException(\
+                raise WrongConfigurationException(
                     "Cannot provide both argument normalize and normalization_func at the same time.")
 
             # Write the file

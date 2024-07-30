@@ -4,12 +4,12 @@ import pickle
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import numpy as np
-import numpy.typing as npt
 
 from .abstract_data_processor import AbstractFitDataProcessor
 from ..exceptions.lib_exceptions import UnknownProcessorSaveFileDataException
+from ..data.types import MixedPrecision2DArray
 
-def _reshape_to_transform(data : np.ndarray) -> npt.NDArray[np.float64]:
+def _reshape_to_transform(data : MixedPrecision2DArray) -> MixedPrecision2DArray:
     """ Reshape an array to (-1, 1)"""
     return np.expand_dims(data.flatten(), axis = 1)
 
@@ -29,32 +29,33 @@ class MeanStandardScaler(StandardScaler):
 
 class ScalerAudioProcessor(AbstractFitDataProcessor):
     """ Scaler data processor """
-    def __init__(self, target_mean : float = 0, 
+    def __init__(self, target_mean : float = 0,
                     feature_range : Tuple[float, float] = (-1 ,1)) -> None:
         """
         Args:
-            target_mean (float, optional): 
+            target_mean (float, optional):
                 The mean that we want on the final datas. Defaults to 0.
-            feature_range (Tuple[float, float], optional): 
+            feature_range (Tuple[float, float], optional):
                 min max values for the final datas. Defaults to (-1 ,1).
         """
         self.ssc = MeanStandardScaler(target_mean)
         self.mms = MinMaxScaler(feature_range=feature_range)
         super().__init__()
 
-    def forward(self, data: np.ndarray) -> npt.NDArray[np.float64]:
+    def forward(self, data: MixedPrecision2DArray) -> MixedPrecision2DArray:
         shape = data.shape
         data = self.ssc.transform(_reshape_to_transform(data)).reshape(shape)
         data = self.mms.transform(_reshape_to_transform(data)).reshape(shape)
         return data
 
-    def backward(self, data: np.ndarray) -> npt.NDArray[np.float64]:
+    def backward(self, data: MixedPrecision2DArray) -> MixedPrecision2DArray:
         shape = data.shape
         data = self.mms.inverse_transform(_reshape_to_transform(data)).reshape(shape)
         data = self.ssc.inverse_transform(_reshape_to_transform(data)).reshape(shape)
         return data
 
-    def fit(self, fit_data: Union[np.ndarray, Generator[np.ndarray, None, None]]):
+    def fit(self,
+            fit_data: Union[MixedPrecision2DArray, Generator[MixedPrecision2DArray, None, None]]):
         shape = fit_data[0].shape
 
         assert not self.is_fitted, \

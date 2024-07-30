@@ -20,4 +20,3 @@ class LibrosaSTFTArgs(dict):
             self['hop_length'] = self['n_fft'] // 4
         if self['win_length'] is None:
             self['win_length'] = self['n_fft']
-            
