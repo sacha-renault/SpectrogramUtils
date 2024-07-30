@@ -42,3 +42,7 @@ class BrokenProcessorException(SpectrogramUtilsException):
 class ProcessorNotFittedException(SpectrogramUtilsException):
     """#### Processor is not fitted before usage
     """
+
+class IndexShapeNotMatchingExeption(SpectrogramUtilsException):
+    """#### Processor is not fitted before usage
+    """

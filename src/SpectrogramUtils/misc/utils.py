@@ -47,10 +47,11 @@ def get_multi_stft(audio_array : MixedPrecision2DArray, **stft_kwargs) -> List[C
     # check if it was multi-channel
     if len(result.shape) == 2:
         return [result]
-    elif len(result.shape) == 3:
-        return [r for r in result]
-    else:
-        raise UnknownStftShapeException("Unknown shape during stft process")
+    if len(result.shape) == 3:
+        return list(result)
+
+    # Else
+    raise UnknownStftShapeException("Unknown shape during stft process")
 
 def rpad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length
@@ -65,8 +66,9 @@ def rpad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> Mixed
     if audio_length < desired_audio_length:
         padding_array = np.zeros((data.shape[0], desired_audio_length - audio_length))
         return np.concatenate((data, padding_array), axis = 1)
-    else:
-        return data[:,:desired_audio_length]
+
+    # Else
+    return data[:,:desired_audio_length]
 
 def lpad_lcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length
@@ -81,8 +83,9 @@ def lpad_lcut(data : MixedPrecision2DArray, desired_audio_length : int) -> Mixed
     if audio_length < desired_audio_length:
         padding_array = np.zeros((data.shape[0], desired_audio_length - audio_length))
         return np.concatenate((padding_array, data), axis = 1)
-    else:
-        return data[:,desired_audio_length:]
+
+    # Else
+    return data[:,desired_audio_length:]
 
 def center_pad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length
@@ -100,8 +103,9 @@ def center_pad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) ->
         l_padding_array = np.zeros((data.shape[0], l_pad_length))
         r_padding_array = np.zeros((data.shape[0], r_pad_length))
         return np.concatenate((l_padding_array, data, r_padding_array), axis = 1)
-    else:
-        return data[:,:desired_audio_length]
+
+    # Else
+    return data[:,:desired_audio_length]
 
 def get_forward_indexer_amplitude_phase(num_channel : int, dim_per_channel : int = 2) -> ArangementPermutation:
     """get an indexer that allows to get data as [Amplitude, Amplitude, ..., Phase, Phase, ...]

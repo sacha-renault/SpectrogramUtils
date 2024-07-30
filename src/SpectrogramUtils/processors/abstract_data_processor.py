@@ -42,9 +42,9 @@ class AbstractDataProcessor(ABC):
         rnd_data_retrieval = self.backward(self.forward(rnd_data))
         err = np.mean(np.abs(rnd_data - rnd_data_retrieval))
         if rnd_data.shape != rnd_data_retrieval.shape or err > precision:
-            raise BrokenProcessorException(f"\
-                The data processor doesn't retreive the data properly. Max err : {1e-15}, \
-                found : {err}. Considere using a AbstractDestructiveDataProcessor")
+            raise BrokenProcessorException(
+                f"The data processor doesn't retreive the data properly. Max err : {1e-15}, "
+                f"found : {err}. Considere using a AbstractDestructiveDataProcessor")
 
 
 class AbstractFitDataProcessor(AbstractDataProcessor, ABC):

@@ -1,9 +1,19 @@
+""" definition of RealImageStftProcessor class"""
 from typing import Tuple, List
 
 from .abstract_stft_processor import AbstractStftComplexProcessor
 from ..data.types import MixedPrecision2DArray, Complex2DArray
 
 class RealImageStftProcessor(AbstractStftComplexProcessor):
+    """Handle convertion in both direction Complex2DArray ↔ MixedPrecision2DArray.
+    This StftProcessor split datas through real and imag values
+
+    Methods:
+        - complexe_to_real
+        - real_to_complexe
+        - shape
+        - num_stfts
+    """
     def num_stfts(self, data : Complex2DArray) -> int:
         return data.shape[0] // 2
 

@@ -12,9 +12,11 @@ from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
 from ..processors.wrapper import DataProcessorWrapper
 from ..exceptions.lib_exceptions import NoProcessorException, \
-    NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, WrongConfigurationException
+    NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, \
+    WrongConfigurationException, IndexShapeNotMatchingExeption
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
-from ..data.types import MixedPrecision2DArray, Complex2DArray, Complex3DArray, ArangementPermutation
+from ..data.types import MixedPrecision2DArray, Complex2DArray, \
+    Complex3DArray, ArangementPermutation
 
 class MultiSpectrogram:
     """Store data from mutliple stft as real array.
@@ -57,9 +59,9 @@ class MultiSpectrogram:
         self.__conf = config
 
         # define config
-        assert isinstance(stft_processor, AbstractStftComplexProcessor), \
-            f"stft_processor must be a AbstractStftComplexProcessor object,\
-            not {type(stft_processor)}"
+        assert isinstance(stft_processor, AbstractStftComplexProcessor), (
+            f"stft_processor must be a AbstractStftComplexProcessor object, "
+            f"not {type(stft_processor)}")
         self.__stft_processor = stft_processor
 
         # Set processor
@@ -68,7 +70,7 @@ class MultiSpectrogram:
 
         # define data
         assert isinstance(data, np.ndarray), f"data must be a NDArray object, not {type(data)}"
-        assert data.dtype == np.float64 or data.dtype == np.float32,\
+        assert data.dtype in (np.float64, np.float32),\
             f"data type must be float64 or float32, not {data.dtype}"
         self.__data = data
 
@@ -111,8 +113,9 @@ class MultiSpectrogram:
             if self.__forward_indexer.shape[0] == data.shape[0]:
                 data = data[self.__forward_indexer] # Rearange the data in correct order
             else:
-                raise Exception(f"backward indexer dimension 0 isn't equal to data dim 0, \
-                    found {self.__forward_indexer.shape[0]} and {data.shape[0]}")
+                raise IndexShapeNotMatchingExeption(
+                    f"backward indexer dimension 0 isn't equal to data dim 0,"
+                    f"found {self.__forward_indexer.shape[0]} and {data.shape[0]}")
         return data
 
     @property
@@ -135,10 +138,10 @@ class MultiSpectrogram:
 
     def show_image_on_axis(self,
                            axis : Axes,
+                           *axes_args,
                            display_type : DisplayType = DisplayType.MEAN,
                            index : Union[int, None] = None,
                            use_processor : bool = False,
-                           *axes_args,
                            **axes_kwargs) -> None:
         """Show the stft on the given axis
             (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
@@ -174,7 +177,7 @@ class MultiSpectrogram:
             display_data += np.min(data, axis = 0)
 
         else:
-            raise WrongDisplayTypeException(\
+            raise WrongDisplayTypeException(
                 f"Cannot use display type {display_type.name} for image display")
 
         if self.__conf.power_to_db_intensity is not None:
@@ -189,9 +192,9 @@ class MultiSpectrogram:
 
     def show_wave_on_axis(self,
                           axis : Axes,
+                          *axes_args,
                           display_type : DisplayType = DisplayType.STACK,
                           index : Union[int, None] = None,
-                          *axes_args,
                           **axes_kwargs) -> None:
         """Show the wave shape on a given axis
 
@@ -222,7 +225,7 @@ class MultiSpectrogram:
                 raise NoIndexException("Can't display index if no index is provided")
 
         else:
-            raise WrongDisplayTypeException(\
+            raise WrongDisplayTypeException(
                 f"Cannot use display type {display_type.name} for image display")
 
     def get_stft(self, index : int, use_processor : bool = False) -> Complex2DArray:
@@ -315,7 +318,7 @@ class MultiSpectrogram:
                 data = normalization_func(data)
 
             elif normalization_func is not None and normalize:
-                raise WrongConfigurationException(\
+                raise WrongConfigurationException(
                     "Cannot provide both argument normalize and normalization_func at the same time.")
 
             # Write the file

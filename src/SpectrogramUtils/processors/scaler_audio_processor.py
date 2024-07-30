@@ -54,7 +54,8 @@ class ScalerAudioProcessor(AbstractFitDataProcessor):
         data = self.ssc.inverse_transform(_reshape_to_transform(data)).reshape(shape)
         return data
 
-    def fit(self, fit_data: Union[MixedPrecision2DArray, Generator[MixedPrecision2DArray, None, None]]):
+    def fit(self,
+            fit_data: Union[MixedPrecision2DArray, Generator[MixedPrecision2DArray, None, None]]):
         shape = fit_data[0].shape
 
         assert not self.is_fitted, \

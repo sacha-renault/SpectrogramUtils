@@ -1,6 +1,6 @@
 """ Define types """
 
-from typing import Union, Callable, TypeAlias
+from typing import Union, Callable
 
 import numpy as np
 import numpy.typing as npt

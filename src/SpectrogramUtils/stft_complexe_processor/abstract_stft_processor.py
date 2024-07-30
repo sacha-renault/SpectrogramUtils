@@ -1,9 +1,19 @@
+""" definition of AbstractStftComplexProcessor class"""
 from abc import ABC, abstractmethod
 from typing import Tuple, List
 
 from ..data.types import MixedPrecision2DArray, Complex2DArray
 
 class AbstractStftComplexProcessor(ABC):
+    """Base abstract class for StftComplexProcessors.
+    Handle convertion in both direction Complex2DArray ↔ MixedPrecision2DArray.
+
+    Methods:
+        - complexe_to_real
+        - real_to_complexe
+        - shape
+        - num_stfts
+    """
     @abstractmethod
     def num_stfts(self, data : Complex2DArray) -> int:
         """get the number of stft from data shape

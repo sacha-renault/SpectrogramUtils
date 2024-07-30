@@ -15,7 +15,8 @@ from ..processors.wrapper import DataProcessorWrapper
 from .multi_spectrogram import MultiSpectrogram
 from ..data.data import AudioPadding
 from ..misc.utils import get_multi_stft, get_backward_indexer
-from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
+from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException,\
+    IndexShapeNotMatchingExeption
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
 from ..data.types import MixedPrecision2DArray, AudioPaddingFunction, ArangementPermutation
@@ -38,15 +39,21 @@ class SpectrogramFactory:
         # Set the data processor
         assert stft_processor is None or isinstance(stft_processor, AbstractStftComplexProcessor),\
           f"stft_processor must be None or AbstractStftComplexProcessor, not {type(stft_processor)}"
-        self.__stft_processor = stft_processor if stft_processor is not None else RealImageStftProcessor()
+        self.__stft_processor = stft_processor \
+            if stft_processor is not None else RealImageStftProcessor()
 
         # Set the data processor
-        assert data_processor is None or isinstance(data_processor, (AbstractDataProcessor, DataProcessorWrapper)),\
+        assert data_processor is None or \
+            isinstance(data_processor, (AbstractDataProcessor, DataProcessorWrapper)),\
             f"data_processor must be None or AbstractDataProcessor, not {type(data_processor)}"
-        self.__processor = data_processor if isinstance(data_processor, DataProcessorWrapper) else DataProcessorWrapper(data_processor)
+        if isinstance(data_processor, DataProcessorWrapper):
+            self.__processor = data_processor
+        else:
+            self.__processor = DataProcessorWrapper(data_processor)
 
-        # Set the padding functino
-        assert audio_padder is None or isinstance(audio_padder, Callable), f"audio_padder must be None or Callable, not {type(audio_padder)}"
+        # Set the padding function
+        assert audio_padder is None or isinstance(audio_padder, Callable), \
+            f"audio_padder must be None or Callable, not {type(audio_padder)}"
         self.__audio_padder = audio_padder
 
         # set ordering (indexer)
@@ -59,13 +66,15 @@ class SpectrogramFactory:
         # Check if config is correct
         if (self.__audio_padder is not None and self.__config.audio_length is None) or \
             (self.__audio_padder is None and self.__config.audio_length is not None):
-            raise WrongConfigurationException("audio_padder and audio_length (in config object) must be either both set or both None")
+            raise WrongConfigurationException(
+                "audio_padder and audio_length (in config object)"
+                "must be either both set or both None")
 
     def save(self, save_dir : str):
         """Save the factory
 
         Args:
-            - save_dir (str): [description]
+            - save_dir (str): directory to save the factory
 
         Raises:
             - NotADirectoryError: Cannot create a new directory to store datas
@@ -118,7 +127,10 @@ class SpectrogramFactory:
         with open(os.path.join(load_dir, "config.json")) as file:
             json_config : dict = json.load(file)
             if json_config.get("version", "0.0.0") != __version__:
-                warnings.warn(f"Found factory saved on version {json_config.get('version', '0.0.0')}. Current version is {__version__}. Factory might be broken, either install correct version or use at your own risk")
+                warnings.warn(
+                    f"Found factory saved on version {json_config.get('version', '0.0.0')}. "
+                    "Current version is {__version__}. Factory might be broken, either install "
+                    "correct version or use at your own risk")
         with open(spath("data_processor"), "rb") as file:
             data_processor = pickle.load(file)
         with open(spath("stft_processor"), "rb") as file:
@@ -168,8 +180,8 @@ class SpectrogramFactory:
             stfts = get_multi_stft(audio_array, **self.__config.get_istft_kwargs())
             return MultiSpectrogram.from_stfts(self.__config, self.__stft_processor, self.__processor, self.__forward_indexer, stfts)
 
-        else:
-            raise WrongConfigurationException(f"Cannot handle data with {audio_array.shape[0]} channels. Configuration is set for {self.__config.num_channel} channels.")
+        # Else
+        raise WrongConfigurationException(f"Cannot handle data with {audio_array.shape[0]} channels. Configuration is set for {self.__config.num_channel} channels.")
 
     def get_spectrogram_from_path(self, file_path : str) -> MultiSpectrogram:
         """
@@ -199,13 +211,16 @@ class SpectrogramFactory:
         # return the spectro
         return self.get_spectrogram_from_audio(audio.transpose())
 
-    def get_spectrograms_from_files(self, audio_or_file_list : Iterable[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
+    def get_spectrograms_from_files(self,
+        audio_or_file_list : Iterable[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
         """
-        Converts a list of audio file paths or numpy arrays to a list of MultiSpectrogram instances.
+        Converts a list of audio file paths or numpy arrays to a list of
+        MultiSpectrogram instances.
 
         Args:
             audio_or_file_list (Iterable[Union[str, np.ndarray]]):
-                A list containing either file paths to audio files (as strings) or numpy arrays representing audio data.
+                A list containing either file paths to audio files (as strings).
+                Or numpy arrays representing audio data.
 
         Raises:
             BadTypeException:
@@ -216,7 +231,8 @@ class SpectrogramFactory:
                 A list of MultiSpectrogram instances created from the audio files or arrays.
         """
         # Type assertion
-        assert isinstance(audio_or_file_list, Iterable), f"audio_or_file_list must be an iterable, not {type(audio_or_file_list)}"
+        assert isinstance(audio_or_file_list, Iterable),\
+            f"audio_or_file_list must be an iterable, not {type(audio_or_file_list)}"
 
         # Init the return list
         spectros : list[MultiSpectrogram] = []
@@ -230,27 +246,34 @@ class SpectrogramFactory:
                 spectros.append(
                     self.get_spectrogram_from_audio(audio_or_file))
             else:
-                raise BadTypeException(f"Couldn't handle type : {type(audio_or_file)}. Can only get file_path as str and audio_file as NDArray")
+                raise BadTypeException(
+                    f"Couldn't handle type : {type(audio_or_file)}."
+                    "Can only get file_path as str and audio_file as NDArray")
         return spectros
 
-    def get_spectrogram_from_model_output(self, model_output : MixedPrecision2DArray, use_processor : bool = True) -> List[MultiSpectrogram]:
+    def get_spectrogram_from_model_output(self,
+            model_output : MixedPrecision2DArray,
+            use_processor : bool = True) -> List[MultiSpectrogram]:
         """From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
         /!\\ the model output should be shaped like (batch, channel, h, w)
 
         Args:
-            model_output (MixedPrecision2DArray): [description]
+            model_output (MixedPrecision2DArray): output from a model.
+                Should be shaped (batch, *data.shape)
+            use_processor (bool, Optional): if backard_processor should be used. Default = True
 
         Returns:
             list[MultiSpectrogram]: Spectrograms from the model output
         """
         # Check if need to be reordered
         if self.__backward_indexer is not None:
-            # new_order = np.arange(model_output.shape[1]).reshape(2, -1).flatten("F")
             if self.__backward_indexer.shape[0] == model_output.shape[1]:
-                model_output = model_output[:, self.__backward_indexer, :, :] # Rearange the data in correct order
+                # Rearange the data in correct order
+                model_output = model_output[:, self.__backward_indexer, :, :]
             else:
-                raise Exception(f"backward indexer dimension 0 isn't equal to model output 1, \
-                    found {self.__backward_indexer.shape[0]} and {model_output.shape[1]}")
+                raise IndexShapeNotMatchingExeption(
+                    f"backward indexer dimension 0 isn't equal to model output 1, "
+                    f"found {self.__backward_indexer.shape[0]} and {model_output.shape[1]}")
 
         # Make spectrograms once it's on the correct order
         spectros : list[MultiSpectrogram] = []
@@ -261,12 +284,16 @@ class SpectrogramFactory:
 
             # Get the spectrogram
             spectros.append(
-                MultiSpectrogram(self.__config, self.__stft_processor, self.__processor, self.__forward_indexer, x))
+                MultiSpectrogram(
+                    self.__config,
+                    self.__stft_processor,
+                    self.__processor,
+                    self.__forward_indexer, x))
 
         return spectros
 
     def get_numpy_dataset(self,
-                          audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]],
+                          audio_or_file_list : List[Union[str, np.ndarray]],
                           use_processor : bool
                           ) -> MixedPrecision2DArray:
         """
@@ -274,10 +301,12 @@ class SpectrogramFactory:
 
         Args:
             audio_or_file_list (Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]]):
-                A list containing either file paths to audio files, numpy arrays representing audio data,
+                A list containing either file paths to audio files,
+                numpy arrays representing audio data,
                 or a list of MultiSpectrogram instances.
             use_processor (bool):
-                A boolean flag indicating whether to process the data before converting it to a numpy dataset.
+                A boolean flag indicating whether to
+                process the data before converting it to a numpy dataset.
 
         Raises:
             WrongConfigurationException:
@@ -290,8 +319,9 @@ class SpectrogramFactory:
                 A numpy array containing the processed audio data.
         """
         if self.__config.audio_length is None or self.__audio_padder is None:
-            raise WrongConfigurationException("Cannot create a numpy dataset with no audio length provided. \n" + \
-                            "Set the audio_length field in the configuration.")
+            raise WrongConfigurationException(
+                "Cannot create a numpy dataset with no audio length provided. \n"
+                "Set the audio_length field in the configuration.")
 
         spectros = self.get_spectrograms_from_files(audio_or_file_list)
         x_data = np.zeros((len(spectros), *spectros[0].shape))

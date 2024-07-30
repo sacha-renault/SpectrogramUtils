@@ -1,3 +1,4 @@
+""" definition of MagnitudePhaseStftProcessor class"""
 from typing import Tuple, List
 
 import numpy as np
@@ -7,6 +8,15 @@ from ..data.types import MixedPrecision2DArray, Complex2DArray
 from .abstract_stft_processor import AbstractStftComplexProcessor
 
 class MagnitudePhaseStftProcessor(AbstractStftComplexProcessor):
+    """Handle convertion in both direction Complex2DArray ↔ MixedPrecision2DArray.
+    This StftProcessor split datas through magnitude and phase values
+
+    Methods:
+        - complexe_to_real
+        - real_to_complexe
+        - shape
+        - num_stfts
+    """
     def num_stfts(self, data : Complex2DArray) -> int:
         return data.shape[0] // 2
 

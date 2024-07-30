@@ -1,5 +1,6 @@
 """ Module that define the DataProcessorWrapper"""
-from .abstract_data_processor import AbstractDataProcessor, AbstractFitDataProcessor, AbstractDestructiveDataProcessor
+from .abstract_data_processor import AbstractDataProcessor, \
+    AbstractFitDataProcessor, AbstractDestructiveDataProcessor
 from ..exceptions.lib_exceptions import NoProcessorException, ProcessorNotFittedException
 from ..data.types import MixedPrecision2DArray
 

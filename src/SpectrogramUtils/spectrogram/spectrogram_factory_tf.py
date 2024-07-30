@@ -29,10 +29,12 @@ class SpectrogramTfFactory(SpectrogramFactory):
 
         Args:
             audio_or_file_list (List[Union[str, MixedPrecision2DArray]]):
-                A list containing either file paths to audio files or numpy arrays representing audio data,
+                A list containing either file paths to audio files
+                or numpy arrays representing audio data,
                 or a list of MultiSpectrogram instances.
             use_processor (bool):
-                A boolean flag indicating whether to process the data before converting it to a TensorFlow dataset.
+                A boolean flag indicating whether to process the data
+                before converting it to a TensorFlow dataset.
 
         Raises:
             ImportError:
