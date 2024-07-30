@@ -4,7 +4,7 @@ from ..exceptions.lib_exceptions import NoProcessorException, ProcessorNotFitted
 from ..data.types import MixedPrecision2DArray
 
 class DataProcessorWrapper:
-    """Container for DataProcessor, allow factory to know if it can use it 
+    """Container for DataProcessor, allow factory to know if it can use it
     """
     def __init__(self, processor : AbstractDataProcessor) -> None:
         self.__need_check = not isinstance(processor, AbstractDestructiveDataProcessor)
@@ -12,7 +12,7 @@ class DataProcessorWrapper:
         self.__processor = processor
 
     def forward(self, data : MixedPrecision2DArray) -> MixedPrecision2DArray:
-        """Preprocess datas, transformation must be reversible to get back to initial state in 
+        """Preprocess datas, transformation must be reversible to get back to initial state in
         backward (i.e. self.backward(self.forward(data)) must be same as data)
 
         Args:
@@ -52,4 +52,3 @@ class DataProcessorWrapper:
     def processor(self) -> AbstractDataProcessor:
         """ Access the processor stored in the wrapper """
         return self.__processor
-    

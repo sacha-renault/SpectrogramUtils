@@ -11,7 +11,7 @@ class AbstractDataProcessor(ABC):
     """ Base class for data processor """
     @abstractmethod
     def forward(self, data : MixedPrecision2DArray) -> MixedPrecision2DArray:
-        """Preprocess datas, transformation must be reversible to get back to initial state in 
+        """Preprocess datas, transformation must be reversible to get back to initial state in
         backward (i.e. self.backward(self.forward(data)) must be same as data)
 
         Args:
@@ -63,10 +63,10 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
 
     @abstractmethod
     def load(self, file : Union[str, List[str]]) -> None:
-        """Restaure the processor to a saved states, it should set is_fitted to True. 
+        """Restaure the processor to a saved states, it should set is_fitted to True.
 
         Args:
-            file (Union[str, list[str]]): file or files to restaure a processor states. 
+            file (Union[str, list[str]]): file or files to restaure a processor states.
         """
 
     @abstractmethod
@@ -82,7 +82,7 @@ class AbstractFitDataProcessor(AbstractDataProcessor, ABC):
         """Save the current state of the processor into a file
 
         Args:
-            file (Union[str, list[str]]): file or files to save a processor states. 
+            file (Union[str, list[str]]): file or files to save a processor states.
         """
 
 

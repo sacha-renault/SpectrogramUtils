@@ -8,7 +8,7 @@ import numpy.typing as npt
 from ..exceptions.lib_exceptions import UnknownStftShapeException
 from ..data.types import Complex2DArray, MixedPrecision2DArray, ArangementPermutation
 
-def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[np.int_]: 
+def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[np.int_]:
     """For a given forward indexer, check it is valid and get it's backward indexing
 
     Args:
@@ -17,18 +17,18 @@ def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[
     Returns:
         npt.NDArray[np.int_]: the backward indexer
     """
-    # Assert the indexer is 1D array 
+    # Assert the indexer is 1D array
     assert len(forward_indexer.shape) == 1,\
         f"forward_indexer should be a 1D array, found shape dimension: {len(forward_indexer.shape)}"
-    
+
     # Assert int values
     assert forward_indexer.dtype == np.int_,\
         f"forward_indexer should be dtyped int, found : {forward_indexer.dtype}"
-    
+
     # backward indexer
     backward_indexer = np.argsort(forward_indexer)
 
-    # Check that forward_indexer is an arangement, 
+    # Check that forward_indexer is an arangement,
     # forward_indexer[backward_indexer] is sorted forward_indexer
     assert np.array_equal(np.arange(forward_indexer.shape[0]), forward_indexer[backward_indexer]),\
         "The indexer isn't an arrangement"
@@ -53,7 +53,7 @@ def get_multi_stft(audio_array : MixedPrecision2DArray, **stft_kwargs) -> List[C
         raise UnknownStftShapeException("Unknown shape during stft process")
 
 def rpad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
-    """ Pad or cut the audio array so that output has a length equal to desired_audio_length 
+    """ Pad or cut the audio array so that output has a length equal to desired_audio_length
     Args:
         data (MixedPrecision2DArray): the input audio array
         desired_audio_length (int): the target length for the audio
@@ -69,7 +69,7 @@ def rpad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> Mixed
         return data[:,:desired_audio_length]
 
 def lpad_lcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
-    """ Pad or cut the audio array so that output has a length equal to desired_audio_length 
+    """ Pad or cut the audio array so that output has a length equal to desired_audio_length
     Args:
         data (MixedPrecision2DArray): the input audio array
         desired_audio_length (int): the target length for the audio
@@ -85,7 +85,7 @@ def lpad_lcut(data : MixedPrecision2DArray, desired_audio_length : int) -> Mixed
         return data[:,desired_audio_length:]
 
 def center_pad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
-    """ Pad or cut the audio array so that output has a length equal to desired_audio_length 
+    """ Pad or cut the audio array so that output has a length equal to desired_audio_length
     Args:
         data (MixedPrecision2DArray): the input audio array
         desired_audio_length (int): the target length for the audio
@@ -102,7 +102,7 @@ def center_pad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) ->
         return np.concatenate((l_padding_array, data, r_padding_array), axis = 1)
     else:
         return data[:,:desired_audio_length]
-    
+
 def get_forward_indexer_amplitude_phase(num_channel : int, dim_per_channel : int = 2) -> ArangementPermutation:
     """get an indexer that allows to get data as [Amplitude, Amplitude, ..., Phase, Phase, ...]
 

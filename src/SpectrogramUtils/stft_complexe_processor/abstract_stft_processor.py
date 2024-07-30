@@ -16,15 +16,15 @@ class AbstractStftComplexProcessor(ABC):
         """
 
     @abstractmethod
-    def complexe_to_real(self, 
-        input_stft : Complex2DArray, 
+    def complexe_to_real(self,
+        input_stft : Complex2DArray,
         data : MixedPrecision2DArray,
         index : int) -> None:
         """transform the stft into real value and store it into data
         """
 
     @abstractmethod
-    def real_to_complexe(self, 
+    def real_to_complexe(self,
         data : MixedPrecision2DArray,
         index : int) -> Complex2DArray:
         """transform the stft into complexe value and return a single stft

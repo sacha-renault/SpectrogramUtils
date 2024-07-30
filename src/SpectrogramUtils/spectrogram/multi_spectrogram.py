@@ -43,7 +43,7 @@ class MultiSpectrogram:
         for i, stft in enumerate(stfts):
             stft_processor.complexe_to_real(stft, data, i)
 
-        # Instanciate the class with the multi spectro 
+        # Instanciate the class with the multi spectro
         return cls(config, stft_processor, processor, forward_indexer, data)
 
     def __init__(self,
@@ -140,14 +140,14 @@ class MultiSpectrogram:
                            use_processor : bool = False,
                            *axes_args,
                            **axes_kwargs) -> None:
-        """Show the stft on the given axis 
+        """Show the stft on the given axis
             (If the processor make the mean of the stft not 0, it RECENTER on 0 !)
 
         Args:
             axis (axes.Axes): Axis to display the stereo spectrogram
-            display_type (DisplayType, optional): 
+            display_type (DisplayType, optional):
                 How to display the stereo spectrogram. Defaults to DisplayType.MEAN.
-            
+
         Raises:
             NoIndexException: DisplayType is INDEX but no index provided
             WrongDisplayTypeException: this DisplayType isn't handled for this method
@@ -193,11 +193,11 @@ class MultiSpectrogram:
                           index : Union[int, None] = None,
                           *axes_args,
                           **axes_kwargs) -> None:
-        """Show the wave shape on a given axis 
+        """Show the wave shape on a given axis
 
         Args:
             axis (axes.Axes): Axis to display the stereo spectrogram
-            display_type (DisplayType, optional): 
+            display_type (DisplayType, optional):
                 How to display the wave. Defaults to DisplayType.STACK.
 
         Raises:
@@ -207,7 +207,7 @@ class MultiSpectrogram:
         axis.set_xlabel('Time')
         axis.set_ylabel('Amplitude')
         if display_type == DisplayType.STACK:
-            axis.plot(self.get_waves().transpose(), *axes_args, **axes_kwargs)            
+            axis.plot(self.get_waves().transpose(), *axes_args, **axes_kwargs)
 
         elif display_type == DisplayType.MEAN:
             waves = self.get_waves()
@@ -271,14 +271,14 @@ class MultiSpectrogram:
             np.ndarray: n-Dimentional wave shape
         """
         waves = None
-        for i in range(self.num_stfts): 
+        for i in range(self.num_stfts):
             wave = self.get_wave(i)
             if waves is None:
                 waves = np.zeros(shape=(self.num_stfts, *wave.shape))
             waves[i] = wave
         return waves
 
-    def save_as_file(self, 
+    def save_as_file(self,
                     file_name : str,
                     normalize : bool = False,
                     normalization_func : Optional[Callable[[Complex2DArray], Complex2DArray]] = None
@@ -287,13 +287,13 @@ class MultiSpectrogram:
 
         Args:
             file_name (str): file name
-            normalize (bool, optional): 
+            normalize (bool, optional):
                 if the audio has to be normalized between -1 and 1. Defaults to False.
-            normalization_func (Callable[[Complex2DArray], Complex2DArray], optional): 
+            normalization_func (Callable[[Complex2DArray], Complex2DArray], optional):
                 User functino to normalize the audio. Defaults to None.
 
         Raises:
-            UnknownWavTypeException: 
+            UnknownWavTypeException:
                 Cannot save as wav file that has more than 2 channels. Call method
                 get_waves and setup a custom save function.
         """

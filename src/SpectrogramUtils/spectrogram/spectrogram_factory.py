@@ -19,7 +19,7 @@ from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeExce
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
 from ..data.types import MixedPrecision2DArray, AudioPaddingFunction, ArangementPermutation
-from .._version import version as __version__
+from .._version import VERSION as __version__
 
 
 class SpectrogramFactory:
@@ -142,24 +142,24 @@ class SpectrogramFactory:
         Converts an audio array to a MultiSpectrogram instance.
 
         Args:
-            audio_array (np.ndarray): 
+            audio_array (np.ndarray):
                 A numpy array representing the audio data. The shape of the array should be (num_channels, samples).
 
         Raises:
-            WrongConfigurationException: 
+            WrongConfigurationException:
                 If the number of channels in the audio array does not match the expected number of channels in the configuration.
-            WrongConfigurationException: 
+            WrongConfigurationException:
                 If the audio length or audio padding function is not provided in the configuration.
 
         Returns:
-            MultiSpectrogram: 
+            MultiSpectrogram:
                 A MultiSpectrogram instance created from the given audio array.
         """
         # padding
         if self.__audio_padder is not None:
             audio_array = self.__audio_padder(audio_array, self.__config.audio_length)
 
-        # If audio is mono, we can copy 
+        # If audio is mono, we can copy
         if audio_array.shape[0] == 1 and self.__config.num_channel > 1:
             audio_array = np.repeat(audio_array, self.__config.num_channel, axis = 0)
 
@@ -167,24 +167,24 @@ class SpectrogramFactory:
         if audio_array.shape[0] == self.__config.num_channel:
             stfts = get_multi_stft(audio_array, **self.__config.get_istft_kwargs())
             return MultiSpectrogram.from_stfts(self.__config, self.__stft_processor, self.__processor, self.__forward_indexer, stfts)
-        
+
         else:
             raise WrongConfigurationException(f"Cannot handle data with {audio_array.shape[0]} channels. Configuration is set for {self.__config.num_channel} channels.")
-        
+
     def get_spectrogram_from_path(self, file_path : str) -> MultiSpectrogram:
         """
         Converts an audio file from the given file path to a MultiSpectrogram instance.
 
         Args:
-            file_path (str): 
+            file_path (str):
                 The path to the audio file.
 
         Returns:
-            MultiSpectrogram: 
+            MultiSpectrogram:
                 A MultiSpectrogram instance created from the audio file.
 
         Raises:
-            AssertionError: 
+            AssertionError:
                 If the file does not exist or if the sample rate of the file does not match the configured sample rate.
         """
         # assert file exist
@@ -198,21 +198,21 @@ class SpectrogramFactory:
 
         # return the spectro
         return self.get_spectrogram_from_audio(audio.transpose())
-    
+
     def get_spectrograms_from_files(self, audio_or_file_list : Iterable[Union[str, np.ndarray]]) -> List[MultiSpectrogram]:
         """
         Converts a list of audio file paths or numpy arrays to a list of MultiSpectrogram instances.
 
         Args:
-            audio_or_file_list (Iterable[Union[str, np.ndarray]]): 
+            audio_or_file_list (Iterable[Union[str, np.ndarray]]):
                 A list containing either file paths to audio files (as strings) or numpy arrays representing audio data.
 
         Raises:
-            BadTypeException: 
+            BadTypeException:
                 If an element in the list is neither a string nor a numpy array.
 
         Returns:
-            List[MultiSpectrogram]: 
+            List[MultiSpectrogram]:
                 A list of MultiSpectrogram instances created from the audio files or arrays.
         """
         # Type assertion
@@ -232,7 +232,7 @@ class SpectrogramFactory:
             else:
                 raise BadTypeException(f"Couldn't handle type : {type(audio_or_file)}. Can only get file_path as str and audio_file as NDArray")
         return spectros
-    
+
     def get_spectrogram_from_model_output(self, model_output : MixedPrecision2DArray, use_processor : bool = True) -> List[MultiSpectrogram]:
         """From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
         /!\\ the model output should be shaped like (batch, channel, h, w)
@@ -262,31 +262,31 @@ class SpectrogramFactory:
             # Get the spectrogram
             spectros.append(
                 MultiSpectrogram(self.__config, self.__stft_processor, self.__processor, self.__forward_indexer, x))
-            
+
         return spectros
-    
-    def get_numpy_dataset(self, 
-                          audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]], 
+
+    def get_numpy_dataset(self,
+                          audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]],
                           use_processor : bool
                           ) -> MixedPrecision2DArray:
         """
         Converts a list of audio files or MultiSpectrogram instances to a numpy dataset.
 
         Args:
-            audio_or_file_list (Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]]): 
+            audio_or_file_list (Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]]):
                 A list containing either file paths to audio files, numpy arrays representing audio data,
                 or a list of MultiSpectrogram instances.
-            use_processor (bool): 
+            use_processor (bool):
                 A boolean flag indicating whether to process the data before converting it to a numpy dataset.
 
         Raises:
-            WrongConfigurationException: 
+            WrongConfigurationException:
                 If the audio length is not provided in the configuration.
-            WrongConfigurationException: 
+            WrongConfigurationException:
                 If the audio padding function is not provided in the configuration.
 
         Returns:
-            MixedPrecision2DArray: 
+            MixedPrecision2DArray:
                 A numpy array containing the processed audio data.
         """
         if self.__config.audio_length is None or self.__audio_padder is None:
@@ -300,11 +300,11 @@ class SpectrogramFactory:
         return x_data
 
     def _get_stft_shape(self):
-        """#### Return the shape that a stft would have 
+        """#### Return the shape that a stft would have
 
         #### Returns:
             - tuple[int, int]: stft shape
-            >>> 
+            >>>
         """
         stft_config = self.__config.get_istft_kwargs()
         audio_length = self.__config.audio_length
@@ -323,4 +323,3 @@ class SpectrogramFactory:
         num_frequency_bins = n_fft // 2 + 1
         return num_frequency_bins, num_frames
 
-    

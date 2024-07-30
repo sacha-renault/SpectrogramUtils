@@ -27,17 +27,17 @@ class SpectrogramTorchFactory(SpectrogramFactory):
             audio_or_file_list (List[Union[str, MixedPrecision2DArray]]):
                 A list containing either file paths to audio files, numpy arrays representing audio data,
                 or a list of MultiSpectrogram instances.
-            use_processor (bool): 
+            use_processor (bool):
                 A boolean flag indicating whether to process the data before converting it to a PyTorch dataset.
-            device_or_obj [Union[torch.device, Any]]: 
+            device_or_obj [Union[torch.device, Any]]:
                 A torch.device to move the tensor to, or an object with a 'device' attribute specifying the device.
 
         Raises:
-            ImportError: 
+            ImportError:
                 If PyTorch is not available, this error is raised.
 
         Returns:
-            torch.Tensor: 
+            torch.Tensor:
                 A PyTorch tensor containing the processed audio data, optionally moved to the specified device.
         """
         if not TORCH_AVAILABLE:
@@ -91,25 +91,25 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         Generates batches of torch Tensors from a list of file paths or a pre-loaded torch Tensor.
 
         Args:
-            file_list_or_tensor (Union[List[str], torch.Tensor]): 
+            file_list_or_tensor (Union[List[str], torch.Tensor]):
                 A list of file paths to load data from or a pre-loaded torch Tensor.
-            batch_size (int): 
+            batch_size (int):
                 The size of each batch to generate.
-            device_or_obj (Union[torch.device, Any]): 
+            device_or_obj (Union[torch.device, Any]):
                 The device on which the tensors should be loaded. Can be a torch.device object or any object with a 'device' attribute.
-            use_processor (bool): 
+            use_processor (bool):
                 A flag indicating whether to use a processor for data loading and transformation.
 
         Raises:
-            BadTypeException: 
+            BadTypeException:
                 If the input type of `file_list_or_tensor` is neither a list of strings nor a torch Tensor.
 
         Returns:
-            Generator[torch.Tensor, None, None]: 
+            Generator[torch.Tensor, None, None]:
                 A generator that yields batches of torch Tensors.
 
         Yields:
-            torch.Tensor: 
+            torch.Tensor:
                 Batches of data as torch Tensors, moved to the specified device.
 
         Examples:
@@ -126,31 +126,31 @@ class SpectrogramTorchFactory(SpectrogramFactory):
             >>>     print(batch)
         """
 
-        # If lst_type is string, we want a generator that load datas from disk 
+        # If lst_type is string, we want a generator that load datas from disk
         if isinstance(file_list_or_tensor, list):
             assert all(map(lambda x : isinstance(x, str), file_list_or_tensor)), \
                 "All instances in the input list must be same type"
             assert isinstance(use_processor, bool), "When using this method with a list of string, you must specified the arg use_processor."
             return self._torch_disk_load_generator(file_list_or_tensor, batch_size, device_or_obj, infinite_generator, use_processor)
-        
+
         # In the other cases, we let the tensor on device, and generator just provides one batch on target device at a time
         elif isinstance(file_list_or_tensor, torch.Tensor):
             if isinstance(use_processor, bool):
                 warnings.warn("use_processor will be ignore since the input datas are type torch.Tensor, that are supposed to be already processed. Set to None to avoid getting warnings")
             return self._torch_generator_to_device(file_list_or_tensor, batch_size, device_or_obj, infinite_generator)
-        
+
         else:
             raise BadTypeException(\
                 f"Cannot make a generator from type : {(type(file_list_or_tensor))}")
 
-    def _torch_disk_load_generator(self, 
-                                   file_list : List[str], 
-                                   batch_size : int, 
-                                   device_or_obj : Optional[Union[torch.device, Any]], 
+    def _torch_disk_load_generator(self,
+                                   file_list : List[str],
+                                   batch_size : int,
+                                   device_or_obj : Optional[Union[torch.device, Any]],
                                    infinite_generator : bool,
-                                   use_processor : bool, 
+                                   use_processor : bool,
                                    ) -> Generator[torch.Tensor, None, None]:
-        
+
         # Get devices and num batches
         device = self._get_device(device_or_obj)
         num_batches = len(file_list) // batch_size
@@ -160,7 +160,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         while loop:
             loop = infinite_generator
 
-            for i in range(num_batches): 
+            for i in range(num_batches):
                 # Get files for current batch
                 batch_files = file_list[i*batch_size:(i+1)*batch_size]
 
@@ -170,7 +170,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
                 # Convert into a torch tensor
                 yield torch.Tensor(batch).to(device)
             # + 1 because we could have a smaller batch in the end
-            if len(file_list) % batch_size != 0: 
+            if len(file_list) % batch_size != 0:
                 # Get files for current batch
                 batch_files = file_list[num_batches*batch_size:]
 
@@ -200,7 +200,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
                 batch = tensor[i*batch_size:(i+1)*batch_size].to(device)
                 yield batch
             # + 1 because we could have a smaller batch in the end
-            if tensor.size(0) % batch_size != 0: 
+            if tensor.size(0) % batch_size != 0:
                 # Get files for current batch
                 batch = tensor[num_batches*batch_size:].to(device)
                 yield batch

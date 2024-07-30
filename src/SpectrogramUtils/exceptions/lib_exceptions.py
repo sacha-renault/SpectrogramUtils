@@ -2,6 +2,7 @@
 
 class SpectrogramUtilsException(Exception):
     """ Base exception for library """
+
 class UnknownStftShapeException(SpectrogramUtilsException):
     """#### Thrown if stft process create bad shaped stfts
     """

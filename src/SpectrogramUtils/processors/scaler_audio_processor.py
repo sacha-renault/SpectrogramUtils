@@ -29,13 +29,13 @@ class MeanStandardScaler(StandardScaler):
 
 class ScalerAudioProcessor(AbstractFitDataProcessor):
     """ Scaler data processor """
-    def __init__(self, target_mean : float = 0, 
+    def __init__(self, target_mean : float = 0,
                     feature_range : Tuple[float, float] = (-1 ,1)) -> None:
         """
         Args:
-            target_mean (float, optional): 
+            target_mean (float, optional):
                 The mean that we want on the final datas. Defaults to 0.
-            feature_range (Tuple[float, float], optional): 
+            feature_range (Tuple[float, float], optional):
                 min max values for the final datas. Defaults to (-1 ,1).
         """
         self.ssc = MeanStandardScaler(target_mean)

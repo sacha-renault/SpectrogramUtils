@@ -32,18 +32,18 @@ class AudioPadding:
 
     RPAD_RCUT = rpad_rcut
     """
-        Add zeros values on the right if the audio is too small. 
+        Add zeros values on the right if the audio is too small.
         Cut the end of the audio if too long.
     """
 
     LPAD_LCUT = lpad_lcut
     """
-        Add zeros on the left if the audio is too small. 
-        Cut the start of the audio if too long 
+        Add zeros on the left if the audio is too small.
+        Cut the start of the audio if too long
     """
 
     CENTER_RCUT = center_pad_rcut
     """
         Add zeros in the left and right to center the audio if too small.
-        Cut the end of the audio if too long. 
+        Cut the end of the audio if too long.
     """

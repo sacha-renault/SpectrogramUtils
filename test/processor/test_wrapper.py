@@ -5,7 +5,7 @@ import numpy as np
 from src.SpectrogramUtils import ScalerAudioProcessor
 from src.SpectrogramUtils.processors.wrapper import DataProcessorWrapper
 from src.SpectrogramUtils.exceptions.lib_exceptions import ProcessorNotFittedException, NoProcessorException
-from src.SpectrogramUtils._version import version as __version__
+from src.SpectrogramUtils._version import VERSION as __version__
 
 def test_no_processor():
     wrapper = DataProcessorWrapper(None)
