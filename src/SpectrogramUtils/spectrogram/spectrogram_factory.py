@@ -13,12 +13,12 @@ from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
 from ..processors.wrapper import DataProcessorWrapper
 from .multi_spectrogram import MultiSpectrogram
-from ..data.data import AudioPadding, ListOrdering
-from ..misc.utils import get_multi_stft
+from ..data.data import AudioPadding
+from ..misc.utils import get_multi_stft, get_backward_indexer
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
-from ..data.types import MixedPrecision2DArray, AudioPaddingFunction
+from ..data.types import MixedPrecision2DArray, AudioPaddingFunction, ArangementPermutation
 from .._version import version as __version__
 
 
@@ -29,7 +29,7 @@ class SpectrogramFactory:
                 stft_processor : Optional[AbstractStftComplexProcessor] = None,
                 data_processor : Optional[AbstractDataProcessor] = None,
                 audio_padder : Optional[AudioPaddingFunction] = AudioPadding.NONE,
-                ordering : ListOrdering = ListOrdering.ALTERNATE
+                forward_indexer : Optional[ArangementPermutation] = None
                 ) -> None:
         # Set the config
         assert isinstance(config, Config), f"config must be Config, not {type(config)}"
@@ -49,9 +49,12 @@ class SpectrogramFactory:
         assert audio_padder is None or isinstance(audio_padder, Callable), f"audio_padder must be None or Callable, not {type(audio_padder)}"
         self.__audio_padder = audio_padder
 
-        # set ordering
-        assert isinstance(ordering, ListOrdering), f"ordering must be type ListOrdering, not {type(ordering)}"
-        self.__ordering = ordering
+        # set ordering (indexer)
+        self.__forward_indexer = forward_indexer
+        if forward_indexer is not None:
+            self.__backward_indexer = get_backward_indexer(forward_indexer)
+        else:
+            self.__backward_indexer = None
 
         # Check if config is correct
         if (self.__audio_padder is not None and self.__config.audio_length is None) or \
@@ -83,8 +86,10 @@ class SpectrogramFactory:
             pickle.dump(self.__processor, file)
         with open(spath("stft_processor"), "wb") as file:
             pickle.dump(self.__stft_processor, file)
-        with open(spath("ordering"), "wb") as file:
-            pickle.dump(self.__ordering, file)
+        with open(spath("fw_indexer"), "wb") as file:
+            pickle.dump(self.__forward_indexer, file)
+        with open(spath("bw_indexer"), "wb") as file:
+            pickle.dump(self.__backward_indexer, file)
         with open(spath("config"), "wb") as file:
             pickle.dump(self.__config, file)
         with open(spath("audio_padder"), "wb") as file:
@@ -161,7 +166,7 @@ class SpectrogramFactory:
         # If number of channels and desired channel number fit, we can do stfts
         if audio_array.shape[0] == self.__config.num_channel:
             stfts = get_multi_stft(audio_array, **self.__config.get_istft_kwargs())
-            return MultiSpectrogram.from_stfts(self.__config, self.__stft_processor, self.__processor, self.__ordering, *stfts)
+            return MultiSpectrogram.from_stfts(self.__config, self.__stft_processor, self.__processor, self.__forward_indexer, stfts)
         
         else:
             raise WrongConfigurationException(f"Cannot handle data with {audio_array.shape[0]} channels. Configuration is set for {self.__config.num_channel} channels.")
@@ -239,9 +244,13 @@ class SpectrogramFactory:
             list[MultiSpectrogram]: Spectrograms from the model output
         """
         # Check if need to be reordered
-        if self.__ordering == ListOrdering.AMPLITUDE_PHASE:
-            new_order = np.arange(model_output.shape[1]).reshape(2, -1).flatten("F")
-            model_output = model_output[:, new_order, :, :] # Rearange the data in correct order
+        if self.__backward_indexer is not None:
+            # new_order = np.arange(model_output.shape[1]).reshape(2, -1).flatten("F")
+            if self.__backward_indexer.shape[0] == model_output.shape[1]:
+                model_output = model_output[:, self.__backward_indexer, :, :] # Rearange the data in correct order
+            else:
+                raise Exception(f"backward indexer dimension 0 isn't equal to model output 1, \
+                    found {self.__backward_indexer.shape[0]} and {model_output.shape[1]}")
 
         # Make spectrograms once it's on the correct order
         spectros : list[MultiSpectrogram] = []
@@ -252,7 +261,7 @@ class SpectrogramFactory:
 
             # Get the spectrogram
             spectros.append(
-                MultiSpectrogram(self.__config, self.__stft_processor, self.__processor, self.__ordering, x))
+                MultiSpectrogram(self.__config, self.__stft_processor, self.__processor, self.__forward_indexer, x))
             
         return spectros
     

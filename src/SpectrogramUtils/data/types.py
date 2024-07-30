@@ -1,6 +1,6 @@
 """ Define types """
 
-from typing import Union, Callable
+from typing import Union, Callable, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -12,3 +12,6 @@ Complex3DArray = npt.NDArray[np.float32]
 
 # Delegate (functions)
 AudioPaddingFunction = Callable[[np.ndarray, int], np.ndarray]
+
+# Indexer
+ArangementPermutation = npt.NDArray[np.int_]

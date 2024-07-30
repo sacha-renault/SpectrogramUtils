@@ -1,20 +1,20 @@
 """ Module that define the MultiSpectrogram class"""
 from __future__ import annotations
-from typing import Union, Optional, Callable
+from typing import Union, Optional, Callable, List
 
 import numpy as np
 import librosa
 import soundfile as sf
 from matplotlib.axes import Axes
 
-from ..data.data import DisplayType, ListOrdering
+from ..data.data import DisplayType
 from ..data.config import Config
 from ..processors.abstract_data_processor import AbstractDataProcessor
 from ..processors.wrapper import DataProcessorWrapper
 from ..exceptions.lib_exceptions import NoProcessorException, \
     NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, WrongConfigurationException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
-from ..data.types import MixedPrecision2DArray, Complex2DArray, Complex3DArray
+from ..data.types import MixedPrecision2DArray, Complex2DArray, Complex3DArray, ArangementPermutation
 
 class MultiSpectrogram:
     """Store data from mutliple stft as real array.
@@ -24,14 +24,15 @@ class MultiSpectrogram:
                    config : Config,
                    stft_processor : AbstractStftComplexProcessor,
                    processor : AbstractDataProcessor,
-                   ordering : ListOrdering,
-                   *stfts : np.ndarray) -> MultiSpectrogram:
+                   forward_indexer : ArangementPermutation,
+                   stfts : List[Complex2DArray]) -> MultiSpectrogram:
         """Same as normal constructor, but stfts are process from complexe array to real arrays
         Args:
             - config (Config): configuration provided by the factory
             - stft_processor (AbstractStftComplexProcessor): stft processor, provided by the factory
             - processor (AbstractDataProcessor): data processor, provided by the factory
-            - ordering (ListOrdering): ordering, provided by the factory
+            - ordering (ArangementPermutation): ordering, provided by the factory
+            - stfts (List[Complex2DArray]): a list of stfts, one per channel
         """
         # assert same shape
         assert all(stft.shape == stfts[0].shape for stft in stfts), \
@@ -43,13 +44,13 @@ class MultiSpectrogram:
             stft_processor.complexe_to_real(stft, data, i)
 
         # Instanciate the class with the multi spectro 
-        return cls(config, stft_processor, processor, ordering, data)
+        return cls(config, stft_processor, processor, forward_indexer, data)
 
     def __init__(self,
                 config : Config,
                 stft_processor : AbstractStftComplexProcessor,
                 processor : DataProcessorWrapper,
-                ordering : ListOrdering,
+                forward_indexer : ArangementPermutation,
                 data : np.ndarray) -> None:
         # define config
         assert isinstance(config, Config), f"config must be a Config object, not {type(config)}"
@@ -72,9 +73,7 @@ class MultiSpectrogram:
         self.__data = data
 
         # Define ordering
-        assert isinstance(ordering, ListOrdering),\
-            f"ordering must be a ListOrdering object, not {type(data)}"
-        self.__ordering = ordering
+        self.__forward_indexer = forward_indexer
 
     def to_data(self, process_data : bool = False) -> MixedPrecision2DArray:
         """return a stereo spectrogram. Indexes precisions :
@@ -108,16 +107,19 @@ class MultiSpectrogram:
             np.ndarray: multi spectrogram
         """
         data = self.to_data(process_data)
-        if self.__ordering == ListOrdering.AMPLITUDE_PHASE:
-            # Rearange the order of the amplitudes and phases
-            data = np.concatenate((data[::2], data[1::2]), axis = 0)
+        if self.__forward_indexer is not None:
+            if self.__forward_indexer.shape[0] == data.shape[0]:
+                data = data[self.__forward_indexer] # Rearange the data in correct order
+            else:
+                raise Exception(f"backward indexer dimension 0 isn't equal to data dim 0, \
+                    found {self.__forward_indexer.shape[0]} and {data.shape[0]}")
         return data
 
     @property
-    def ordering(self) -> ListOrdering:
+    def forward_indexer(self) -> ArangementPermutation:
         """Return the list ordering set for this spectrogram
         """
-        return self.__ordering
+        return self.__forward_indexer
 
     @property
     def num_stfts(self) -> int:

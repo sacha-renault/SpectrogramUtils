@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch, mock_open
+from unittest.mock import patch, mock_open
 import json
 import pickle
 
@@ -7,8 +7,9 @@ import numpy as np
 import librosa 
 
 from src.SpectrogramUtils import SpectrogramFactory, Config, ScalerAudioProcessor, AudioPadding, \
-    SimpleScalingProcessor, LibrosaSTFTArgs, ListOrdering, MultiSpectrogram, RealImageStftProcessor
+    SimpleScalingProcessor, LibrosaSTFTArgs, MultiSpectrogram, RealImageStftProcessor
 from src.SpectrogramUtils.exceptions.lib_exceptions import WrongConfigurationException,BadTypeException
+from src.SpectrogramUtils.misc.utils import get_forward_indexer_amplitude_phase
 from src.SpectrogramUtils._version import version as __version__
 
 def test_factory_constructor_success():
@@ -81,7 +82,8 @@ def test_factory_get_numpy_dataset_success():
 def test_factory_get_numpy_dataset_success_alt():  
     config = Config(1, audio_length=10000, stft_config=LibrosaSTFTArgs())
     processor = SimpleScalingProcessor(1, 1, 0)
-    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, ordering=ListOrdering.AMPLITUDE_PHASE)
+    indexer = get_forward_indexer_amplitude_phase(config.num_channel)
+    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, forward_indexer=indexer)
     audio_arrays = [np.random.rand(1, 10000) for _ in range(5)]
     audio_stfts = librosa.stft(np.array(audio_arrays), **LibrosaSTFTArgs())
     datas = factory.get_numpy_dataset(audio_arrays, True)
@@ -92,14 +94,16 @@ def test_factory_get_numpy_dataset_success_alt():
 def test_factory_get_spectrogram_exception():  
     config = Config(1, audio_length=10000, stft_config=LibrosaSTFTArgs())
     processor = SimpleScalingProcessor(1, 1, 0)
-    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, ordering=ListOrdering.AMPLITUDE_PHASE)
+    indexer = get_forward_indexer_amplitude_phase(config.num_channel)
+    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, forward_indexer=indexer)
     with pytest.raises(BadTypeException):
         factory.get_spectrograms_from_files([3])
     
 def test_factory_get_spectrogram_load_file():  
     config = Config(2, audio_length=10000, stft_config=LibrosaSTFTArgs())
     processor = SimpleScalingProcessor(1, 1, 0)
-    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, ordering=ListOrdering.AMPLITUDE_PHASE)
+    indexer = get_forward_indexer_amplitude_phase(config.num_channel)
+    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, forward_indexer=indexer)
     mock_data = np.random.rand(10000, 1)
     mock_samplerate = 44100
     with patch('os.path.isfile', return_value=True):
@@ -110,14 +114,16 @@ def test_factory_get_spectrogram_load_file():
 def test_factory_get_spectrogram_channel_break():  
     config = Config(2, audio_length=10000, stft_config=LibrosaSTFTArgs())
     processor = SimpleScalingProcessor(1, 1, 0)
-    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, ordering=ListOrdering.AMPLITUDE_PHASE)
+    indexer = get_forward_indexer_amplitude_phase(config.num_channel)
+    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, forward_indexer=indexer)
     with pytest.raises(WrongConfigurationException):
         factory.get_spectrogram_from_audio(np.random.rand(3, 1000))
 
 def test_factory_from_model_output():
     config = Config(2, audio_length=10000, stft_config=LibrosaSTFTArgs())
     processor = SimpleScalingProcessor(1, 1, 0)
-    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, ordering=ListOrdering.AMPLITUDE_PHASE)
+    indexer = get_forward_indexer_amplitude_phase(config.num_channel)
+    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=lambda x, _ : x, forward_indexer=indexer)
     model_output_mock = np.random.rand(8, 4, 256, 256)
     specs = factory.get_spectrogram_from_model_output(model_output_mock)
     assert all([isinstance(spec, MultiSpectrogram) for spec in specs])
@@ -128,11 +134,12 @@ def test_factory_from_model_output():
 def test_factory_save():
     config = Config(2, audio_length=10000, stft_config=LibrosaSTFTArgs())
     processor = SimpleScalingProcessor(1, 1, 0)
-    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=AudioPadding.CENTER_RCUT, ordering=ListOrdering.AMPLITUDE_PHASE)
+    indexer = get_forward_indexer_amplitude_phase(config.num_channel)
+    factory = SpectrogramFactory(config, data_processor=processor, audio_padder=AudioPadding.CENTER_RCUT, forward_indexer=indexer)
     with patch('src.SpectrogramUtils.spectrogram.spectrogram_factory.open', mock_open(), create=True) as open_mock:
         with patch("os.mkdir") as mkdir_mock:
             factory.save("save_dir")
-            assert open_mock.call_count == 6
+            assert open_mock.call_count == 7
             assert mkdir_mock.call_count == 1
 
 def test_factory_load():
@@ -140,7 +147,7 @@ def test_factory_load():
         bytes(json.dumps({"version": __version__}), 'utf-8'), 
         pickle.dumps(SimpleScalingProcessor(1,1,0)), 
         pickle.dumps(RealImageStftProcessor()), 
-        pickle.dumps(ListOrdering.ALTERNATE), 
+        pickle.dumps(get_forward_indexer_amplitude_phase(2)), 
         pickle.dumps(Config(2, audio_length=5000)), 
         pickle.dumps(AudioPadding.CENTER_RCUT)
     ]
@@ -158,7 +165,7 @@ def test_factory_load_not_good_version():
         bytes(json.dumps({"version": "pas la bonne version"}), 'utf-8'), 
         pickle.dumps(SimpleScalingProcessor(1,1,0)), 
         pickle.dumps(RealImageStftProcessor()), 
-        pickle.dumps(ListOrdering.ALTERNATE), 
+        pickle.dumps(get_forward_indexer_amplitude_phase(2)), 
         pickle.dumps(Config(2, audio_length=5000)), 
         pickle.dumps(AudioPadding.CENTER_RCUT)
     ]

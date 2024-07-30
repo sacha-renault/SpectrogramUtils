@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 
-from src.SpectrogramUtils import SpectrogramFactory, MultiSpectrogram, Config, RealImageStftProcessor, MagnitudePhaseStftProcessor, ListOrdering, DisplayType
+from src.SpectrogramUtils import MultiSpectrogram, Config, RealImageStftProcessor, MagnitudePhaseStftProcessor, DisplayType
 from src.SpectrogramUtils.processors.wrapper import DataProcessorWrapper
 from src.SpectrogramUtils.exceptions.lib_exceptions import WrongConfigurationException, WrongDisplayTypeException, NoIndexException, UnknownWavTypeException
 
@@ -13,10 +13,10 @@ def test_multi_spectrogram_real_imag():
     data_processor = DataProcessorWrapper(None)
 
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     assert np.all(np.abs(spec.get_stfts() - data) < 1e-15)
     assert all([np.all(np.abs(spec.get_stft(i) - x) < 1e-15) for i,x in enumerate(data)])
-    assert spec.ordering == ListOrdering.ALTERNATE
+    assert spec.forward_indexer == None
 
 
 def test_multi_spectrogram_mag_phase():
@@ -25,7 +25,7 @@ def test_multi_spectrogram_mag_phase():
     data_processor = DataProcessorWrapper(None)
 
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     assert np.all(np.abs(spec.get_stfts() - data) < 1e-15)
     assert all([np.all(np.abs(spec.get_stft(i) - x) < 1e-15) for i,x in enumerate(data)])
 
@@ -35,7 +35,7 @@ def test_multi_spectrogram_shape():
     data_processor = DataProcessorWrapper(None)
 
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     assert spec.shape == (len(data) * 2, *data[0].shape)
 
 def test_show_wave_on_axis():
@@ -43,7 +43,7 @@ def test_show_wave_on_axis():
     stft_processor = RealImageStftProcessor()
     data_processor = DataProcessorWrapper(None)
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     ax = Mock()
     ax.plot = MagicMock()
     spec.show_wave_on_axis(ax, display_type=DisplayType.STACK)
@@ -56,7 +56,7 @@ def test_show_wave_fails():
     stft_processor = RealImageStftProcessor()
     data_processor = DataProcessorWrapper(None)
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     ax = Mock()
     ax.plot = MagicMock()
     with pytest.raises(WrongDisplayTypeException):
@@ -69,7 +69,7 @@ def test_show_wave_fails_index():
     stft_processor = RealImageStftProcessor()
     data_processor = DataProcessorWrapper(None)
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     ax = Mock()
     ax.plot = MagicMock()
     with pytest.raises(NoIndexException):
@@ -81,7 +81,7 @@ def test_save_as_file():
     stft_processor = RealImageStftProcessor()
     data_processor = DataProcessorWrapper(None)
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
     spec.get_waves = MagicMock(return_value=array)
     spec.__conf = MagicMock()
@@ -97,7 +97,7 @@ def test_save_as_file():
 
         config.num_channel = 3
         data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(3)]
-        n_spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        n_spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
         with pytest.raises(UnknownWavTypeException, match="Cannot save audio if it isn't mono or stereo"):
             n_spec.save_as_file("test_audio")
 
@@ -106,7 +106,7 @@ def test_save_as_file_fails1():
         stft_processor = RealImageStftProcessor()
         data_processor = DataProcessorWrapper(None)
         data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
-        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
         array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
         spec.get_waves = MagicMock(return_value=array)
         spec.__conf = MagicMock()
@@ -121,7 +121,7 @@ def test_save_as_file_success_ext():
         stft_processor = RealImageStftProcessor()
         data_processor = DataProcessorWrapper(None)
         data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
-        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
         array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
         spec.get_waves = MagicMock(return_value=array)
         spec.__conf = MagicMock()
@@ -138,7 +138,7 @@ def test_save_as_file_success_ext_2():
         stft_processor = RealImageStftProcessor()
         data_processor = DataProcessorWrapper(None)
         data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(2)]
-        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+        spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
         array = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
         spec.get_waves = MagicMock(return_value=array)
         spec.__conf = MagicMock()
@@ -155,7 +155,7 @@ def test_show_image():
     stft_processor = RealImageStftProcessor()
     data_processor = DataProcessorWrapper(None)
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     ax = Mock()
     ax.imshow = MagicMock()
     spec.show_image_on_axis(ax, display_type=DisplayType.MIN)
@@ -170,7 +170,7 @@ def test_show_image_fails():
     stft_processor = RealImageStftProcessor()
     data_processor = DataProcessorWrapper(None)
     data = [np.random.rand(256,256) + 1j*np.random.rand(256,256) for _ in range(4)]
-    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, ListOrdering.ALTERNATE, *data)
+    spec = MultiSpectrogram.from_stfts(config, stft_processor, data_processor, None, data)
     ax = Mock()
     ax.imshow = MagicMock()
     with pytest.raises(WrongDisplayTypeException):
