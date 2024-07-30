@@ -20,14 +20,20 @@ def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[
     # Assert the indexer is 1D array 
     assert len(forward_indexer.shape) == 1,\
         f"forward_indexer should be a 1D array, found shape dimension: {len(forward_indexer.shape)}"
+    
+    # Assert int values
+    assert forward_indexer.dtype == np.int_,\
+        f"forward_indexer should be dtyped int, found : {forward_indexer.dtype}"
+    
+    # backward indexer
+    backward_indexer = np.argsort(forward_indexer)
 
     # Check that forward_indexer is an arangement
-    sorted_indexer = np.sort(forward_indexer)
-    aranged_indexer = np.arange(forward_indexer.shape[0])
-    assert np.array_equal(aranged_indexer, sorted_indexer), "The indexer isn't an arrangement"
+    assert np.array_equal(np.arange(forward_indexer.shape[0]), forward_indexer[backward_indexer]),\
+        "The indexer isn't an arrangement"
 
     # get the backward_indexer
-    return np.argsort(forward_indexer)
+    return backward_indexer
 
 def get_multi_stft(audio_array : MixedPrecision2DArray, **stft_kwargs) -> List[Complex2DArray]:
     """ Get stft(s) with librosa"""
