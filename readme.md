@@ -146,15 +146,15 @@ Data processor must inheritate from either AbstractFitDataProcessor or AbstractD
 
 ```python
 class YourDataProcessor(AbstractDataProcessor):
-    def forward(self, data : np.ndarray) -> npt.NDArray[np.float64]:
+    def forward(self, data : MixedPrecisionArray) -> MixedPrecisionArray:
         """#### Preprocess datas, transformation must be reversible to get back to initial state in backward
         (i.e. self.backward(self.forward(data)) must be same as data)
 
         #### Args:
-            - data (np.ndarray): single data
+            - data (MixedPrecisionArray): single data
 
         #### Returns:
-            - npt.NDArray[np.float64]: processed data
+            - npt.NDArray[MixedPrecisionArray]: processed data
         """
         # TODO
 

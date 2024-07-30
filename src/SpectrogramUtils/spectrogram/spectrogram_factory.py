@@ -19,6 +19,7 @@ from ..misc.utils import get_multi_stft
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
+from ..data.types import MixedPrecision2DArray
 from .._version import version as __version__
 
 
@@ -228,12 +229,12 @@ class SpectrogramFactory:
                 raise BadTypeException(f"Couldn't handle type : {type(audio_or_file)}. Can only get file_path as str and audio_file as NDArray")
         return spectros
     
-    def get_spectrogram_from_model_output(self, model_output : npt.NDArray[np.float64], use_processor : bool = True) -> List[MultiSpectrogram]:
+    def get_spectrogram_from_model_output(self, model_output : MixedPrecision2DArray, use_processor : bool = True) -> List[MultiSpectrogram]:
         """From model output, recreate a spectrogram, rearrange the amplitude phase if needed.
         /!\\ the model output should be shaped like (batch, channel, h, w)
 
         Args:
-            model_output (npt.NDArray[np.float64]): [description]
+            model_output (MixedPrecision2DArray): [description]
 
         Returns:
             list[MultiSpectrogram]: Spectrograms from the model output
@@ -259,7 +260,7 @@ class SpectrogramFactory:
     def get_numpy_dataset(self, 
                           audio_or_file_list : Union[List[Union[str, np.ndarray]], List[MultiSpectrogram]], 
                           use_processor : bool
-                          ) -> npt.NDArray[np.float64]:
+                          ) -> MixedPrecision2DArray:
         """
         Converts a list of audio files or MultiSpectrogram instances to a numpy dataset.
 
@@ -277,7 +278,7 @@ class SpectrogramFactory:
                 If the audio padding function is not provided in the configuration.
 
         Returns:
-            npt.NDArray[np.float64]: 
+            MixedPrecision2DArray: 
                 A numpy array containing the processed audio data.
         """
         if self.__config.audio_length is None or self.__audio_padder is None:

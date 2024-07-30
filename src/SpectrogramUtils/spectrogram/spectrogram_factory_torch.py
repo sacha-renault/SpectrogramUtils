@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..exceptions.lib_exceptions import BadTypeException
+from ..data.types import MixedPrecision2DArray
 
 # try import torch
 try:
@@ -18,7 +19,7 @@ from .spectrogram_factory import SpectrogramFactory
 
 class SpectrogramTorchFactory(SpectrogramFactory):
     def get_torch_dataset(self,
-                          audio_or_file_list : List[Union[str, npt.NDArray[np.float64]]],
+                          audio_or_file_list : List[Union[str, MixedPrecision2DArray]],
                           use_processor : bool,
                           device_or_obj : Union[torch.device, str, Any]
                           ) -> torch.Tensor:
@@ -26,7 +27,7 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         Converts the given audio or file list to a PyTorch dataset.
 
         Args:
-            audio_or_file_list (List[Union[str, npt.NDArray[np.float64]]]):
+            audio_or_file_list (List[Union[str, MixedPrecision2DArray]]):
                 A list containing either file paths to audio files, numpy arrays representing audio data,
                 or a list of MultiSpectrogram instances.
             use_processor (bool): 

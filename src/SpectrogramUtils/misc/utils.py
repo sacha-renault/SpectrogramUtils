@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..exceptions.lib_exceptions import UnknownStftShapeException
+from ..data.types import Complex2DArray, MixedPrecision2DArray
 
 def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[np.int_]: 
     """For a given forward indexer, check it is valid and get it's backward indexing
@@ -28,7 +29,7 @@ def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[
     # get the backward_indexer
     return np.argsort(forward_indexer)
 
-def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> List[np.ndarray]:
+def get_multi_stft(audio_array : MixedPrecision2DArray, **stft_kwargs) -> List[Complex2DArray]:
     """ Get stft(s) with librosa"""
     # Ensure the input array is at most 2D
     assert len(audio_array.shape) <= 2
@@ -44,10 +45,10 @@ def get_multi_stft(audio_array : np.ndarray, **stft_kwargs) -> List[np.ndarray]:
     else:
         raise UnknownStftShapeException("Unknown shape during stft process")
 
-def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+def rpad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length 
     Args:
-        data (np.ndarray): the input audio array
+        data (MixedPrecision2DArray): the input audio array
         desired_audio_length (int): the target length for the audio
     Return
         (np.ndarray): correctly shaped audio array
@@ -60,13 +61,13 @@ def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.f
     else:
         return data[:,:desired_audio_length]
 
-def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+def lpad_lcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length 
     Args:
-        data (np.ndarray): the input audio array
+        data (MixedPrecision2DArray): the input audio array
         desired_audio_length (int): the target length for the audio
     Return
-        (np.ndarray): correctly shaped audio array
+        (MixedPrecision2DArray): correctly shaped audio array
     """
     assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
@@ -76,13 +77,13 @@ def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.f
     else:
         return data[:,desired_audio_length:]
 
-def center_pad_rcut(data : np.ndarray, desired_audio_length : int) -> npt.NDArray[np.float64]:
+def center_pad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) -> MixedPrecision2DArray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length 
     Args:
-        data (np.ndarray): the input audio array
+        data (MixedPrecision2DArray): the input audio array
         desired_audio_length (int): the target length for the audio
     Return
-        (np.ndarray): correctly shaped audio array
+        (MixedPrecision2DArray): correctly shaped audio array
     """
     assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]

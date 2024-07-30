@@ -15,6 +15,7 @@ from ..processors.wrapper import DataProcessorWrapper
 from ..exceptions.lib_exceptions import NoProcessorException, \
     NoIndexException, WrongDisplayTypeException, UnknownWavTypeException, WrongConfigurationException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
+from ..data.types import MixedPrecision2DArray, Complex2DArray, Complex3DArray
 
 class MultiSpectrogram:
     """Store data from mutliple stft as real array.
@@ -76,7 +77,7 @@ class MultiSpectrogram:
             f"ordering must be a ListOrdering object, not {type(data)}"
         self.__ordering = ordering
 
-    def to_data(self, process_data : bool = False) -> npt.NDArray[np.float64]:
+    def to_data(self, process_data : bool = False) -> MixedPrecision2DArray:
         """return a stereo spectrogram. Indexes precisions :
         - 2*n : amplitude of stft at index n
         - 2*n + 1 : phase of stft at index n
@@ -223,7 +224,7 @@ class MultiSpectrogram:
             raise WrongDisplayTypeException(\
                 f"Cannot use display type {display_type.name} for image display")
 
-    def get_stft(self, index : int, use_processor : bool = False) -> npt.NDArray[np.complex128]:
+    def get_stft(self, index : int, use_processor : bool = False) -> Complex2DArray:
         """Get a stft at a specified index
 
         Args:
@@ -235,7 +236,7 @@ class MultiSpectrogram:
         data = self.to_data(use_processor)
         return self.__stft_processor.real_to_complexe(data, index)
 
-    def get_stfts(self, use_processor : bool = False) -> npt.NDArray[np.complex128]:
+    def get_stfts(self, use_processor : bool = False) -> Complex3DArray:
         """Get all the stfts of the multispectrogram as a complex array
 
         Args:
@@ -249,7 +250,7 @@ class MultiSpectrogram:
             stfts[i] = self.get_stft(i, use_processor)
         return stfts
 
-    def get_wave(self, index : int) -> npt.NDArray[np.float64]:
+    def get_wave(self, index : int) -> Complex2DArray:
         """Get the wave shape for the channel at the requested index
 
         Args:
@@ -262,7 +263,7 @@ class MultiSpectrogram:
         wave = librosa.istft(stft, **self.__conf.get_istft_kwargs())
         return wave
 
-    def get_waves(self) -> npt.NDArray[np.float64]:
+    def get_waves(self) -> Complex2DArray:
         """Get the wave shape for all channels
 
         Returns:
@@ -279,7 +280,7 @@ class MultiSpectrogram:
     def save_as_file(self, 
                     file_name : str,
                     normalize : bool = False,
-                    normalization_func : Optional[Callable[[npt.NDArray], npt.NDArray]] = None
+                    normalization_func : Optional[Callable[[Complex2DArray], Complex2DArray]] = None
                     ) -> None:
         """ Save the file as wav
 
@@ -287,7 +288,7 @@ class MultiSpectrogram:
             file_name (str): file name
             normalize (bool, optional): 
                 if the audio has to be normalized between -1 and 1. Defaults to False.
-            normalization_func (Callable[[npt.NDArray], npt.NDArray], optional): 
+            normalization_func (Callable[[Complex2DArray], Complex2DArray], optional): 
                 User functino to normalize the audio. Defaults to None.
 
         Raises:

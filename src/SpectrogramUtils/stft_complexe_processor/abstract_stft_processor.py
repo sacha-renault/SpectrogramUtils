@@ -3,30 +3,31 @@ from typing import Union, Tuple, List
 
 import numpy as np
 import numpy.typing as npt
+from ..data.types import MixedPrecision2DArray, Complex2DArray
 
 class AbstractStftComplexProcessor(ABC):
     @abstractmethod
-    def num_stfts(self, data : npt.NDArray) -> int:
-        """[summary] get the number of stft from data shape
+    def num_stfts(self, data : Complex2DArray) -> int:
+        """get the number of stft from data shape
         """
 
 
     @abstractmethod
-    def shape(self, input_stfts : List[npt.NDArray[np.complex128]]) -> Tuple:
-        """[summary] return the shape the the stored data should have
+    def shape(self, input_stfts : List[Complex2DArray]) -> Tuple:
+        """return the shape the the stored data should have
         """
 
     @abstractmethod
     def complexe_to_real(self, 
-        input_stft : npt.NDArray[np.complex128], 
-        data : Union[npt.NDArray[np.float64], npt.NDArray[np.float32]],
+        input_stft : Complex2DArray, 
+        data : MixedPrecision2DArray,
         index : int) -> None:
-        """[summary] transform the stft into real value and store it into data
+        """transform the stft into real value and store it into data
         """
 
     @abstractmethod
     def real_to_complexe(self, 
-        data : Union[npt.NDArray[np.float64], npt.NDArray[np.float32]],
-        index : int) -> npt.NDArray[np.float64]:
-        """[summary] transform the stft into complexe value and return a single stft
+        data : MixedPrecision2DArray,
+        index : int) -> Complex2DArray:
+        """transform the stft into complexe value and return a single stft
         """
