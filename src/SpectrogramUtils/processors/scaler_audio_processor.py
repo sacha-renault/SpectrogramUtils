@@ -4,7 +4,6 @@ import pickle
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import numpy as np
-import numpy.typing as npt
 
 from .abstract_data_processor import AbstractFitDataProcessor
 from ..exceptions.lib_exceptions import UnknownProcessorSaveFileDataException

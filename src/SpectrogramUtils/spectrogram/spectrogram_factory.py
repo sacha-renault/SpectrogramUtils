@@ -7,7 +7,6 @@ import warnings
 import os
 
 import numpy as np
-import numpy.typing as npt
 import soundfile as sf
 
 from ..data.config import Config

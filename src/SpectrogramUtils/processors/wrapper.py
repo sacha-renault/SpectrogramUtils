@@ -1,9 +1,4 @@
 """ Module that define the DataProcessorWrapper"""
-from typing import Union
-
-import numpy as np
-import numpy.typing as npt
-
 from .abstract_data_processor import AbstractDataProcessor, AbstractFitDataProcessor, AbstractDestructiveDataProcessor
 from ..exceptions.lib_exceptions import NoProcessorException, ProcessorNotFittedException
 from ..data.types import MixedPrecision2DArray

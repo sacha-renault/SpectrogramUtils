@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from typing import Union, List
 
 import numpy as np
-import numpy.typing as npt
 
 from ..exceptions.lib_exceptions import BrokenProcessorException
 from ..data.types import MixedPrecision2DArray

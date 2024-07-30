@@ -2,9 +2,6 @@
 import warnings
 from typing import Union, List, Optional, Any, Generator
 
-import numpy as np
-import numpy.typing as npt
-
 from ..exceptions.lib_exceptions import BadTypeException
 from ..data.types import MixedPrecision2DArray
 

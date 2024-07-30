@@ -1,8 +1,4 @@
-from typing import Union, Tuple, List
-
-import numpy as np
-from numpy._typing import NDArray
-import numpy.typing as npt
+from typing import Tuple, List
 
 from .abstract_stft_processor import AbstractStftComplexProcessor
 from ..data.types import MixedPrecision2DArray, Complex2DArray

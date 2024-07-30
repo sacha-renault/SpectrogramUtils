@@ -1,7 +1,6 @@
-from typing import Union, Tuple, List
+from typing import Tuple, List
 
 import numpy as np
-import numpy.typing as npt
 
 from ..data.types import MixedPrecision2DArray, Complex2DArray
 

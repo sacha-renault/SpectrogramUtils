@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Union, Optional, Callable
 
 import numpy as np
-import numpy.typing as npt
 import librosa
 import soundfile as sf
 from matplotlib.axes import Axes

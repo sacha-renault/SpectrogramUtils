@@ -1,9 +1,6 @@
 """ Module that define tensorflow extension """
 from typing import Union, List
 
-import numpy as np
-import numpy.typing as npt
-
 from ..data.types import MixedPrecision2DArray
 
 # try import torch
