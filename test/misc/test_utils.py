@@ -1,5 +1,7 @@
+from itertools import permutations
+
 import pytest
-import numpy as np
+import numpy as np 
 
 from src.SpectrogramUtils.misc import utils
 
@@ -72,3 +74,22 @@ def test_center_pad_rcut_normal_smaller():
     result = utils.center_pad_rcut(array, 500)
     assert result.shape == (2, 500)
     assert np.array_equal(array[:, :500], result)
+
+def test_get_backward_indexer_assert1():
+    with pytest.raises(AssertionError, match="forward_indexer should be a 1D array"):
+        utils.get_backward_indexer(np.arange(6).reshape(-1, 1))
+
+def test_get_backward_indexer_assert2():
+    with pytest.raises(AssertionError, match="forward_indexer should be dtyped int"):
+        utils.get_backward_indexer(np.random.rand(2))
+
+def test_get_backward_indexer_assert3():
+    with pytest.raises(AssertionError, match="The indexer isn't an arrangement"):
+        utils.get_backward_indexer(np.arange(1, 6))
+
+def test_get_backward_indexer_success():
+    data = np.random.randint(0, 10, (4, 10))
+    for perm in permutations(range(4)):
+        forward_indexer = np.array(perm)
+        backward_indexer = utils.get_backward_indexer(forward_indexer)
+        assert np.array_equal(data, data[forward_indexer][backward_indexer])
