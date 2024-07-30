@@ -8,7 +8,8 @@ import librosa
 
 from src.SpectrogramUtils import SpectrogramFactory, Config, ScalerAudioProcessor, AudioPadding, \
     SimpleScalingProcessor, LibrosaSTFTArgs, MultiSpectrogram, RealImageStftProcessor
-from src.SpectrogramUtils.exceptions.lib_exceptions import WrongConfigurationException,BadTypeException
+from src.SpectrogramUtils.exceptions.lib_exceptions import \
+    WrongConfigurationException, BadTypeException, VersionNotCompatibleException
 from src.SpectrogramUtils.misc.utils import get_forward_indexer_amplitude_phase
 from src.SpectrogramUtils._version import VERSION as __version__
 
@@ -162,7 +163,7 @@ def test_factory_load():
 
 def test_factory_load_not_good_version():
     mock_file_contents = [
-        bytes(json.dumps({"version": "pas la bonne version"}), 'utf-8'),
+        bytes(json.dumps({"version": "0.0.0"}), 'utf-8'),
         pickle.dumps(SimpleScalingProcessor(1,1,0)),
         pickle.dumps(RealImageStftProcessor()),
         pickle.dumps(get_forward_indexer_amplitude_phase(2)),

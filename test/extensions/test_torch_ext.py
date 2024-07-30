@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import patch
 
 import numpy as np
@@ -20,7 +21,7 @@ def test_get_torch_dataset_batch_generator_from_preloaded():
     data = next(generator)
     assert isinstance(data, torch.Tensor)
     assert data.shape == (5, 10, 10)
-    
+
 
 
 def test_get_torch_dataset_batch_generator_from_disk():
@@ -50,3 +51,10 @@ def test_get_torch_dataset():
     assert dataset.shape[0] == 10
     dataset = factory.get_torch_dataset(audios, use_processor=False, device_or_obj = None)
     assert dataset.shape[0] == 10
+
+def test_get_torch_dataset_warning():
+    factory = SpectrogramTorchFactory(Config(2, audio_length=5000), audio_padder=AudioPadding.LPAD_LCUT)
+    audios = [ np.random.rand(1,1000) for _ in range(10) ]
+    with pytest.warns():
+        dataset = factory.get_torch_dataset(audios, use_processor=False, device_or_obj = int(6))
+        assert dataset.shape[0] == 10

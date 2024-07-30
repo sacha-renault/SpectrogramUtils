@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Callable, Union, Optional, List, Iterable
 import pickle
 import json
-import warnings
 import os
 
 import numpy as np
@@ -16,10 +15,11 @@ from .multi_spectrogram import MultiSpectrogram
 from ..data.data import AudioPadding
 from ..misc.utils import get_multi_stft, get_backward_indexer
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException,\
-    IndexShapeNotMatchingExeption
+    IndexShapeNotMatchingExeption, VersionNotCompatibleException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
 from ..data.types import MixedPrecision2DArray, AudioPaddingFunction, ArangementPermutation
+from ..data.compatibility import are_versions_compatible
 from .._version import VERSION as __version__
 
 
@@ -122,15 +122,19 @@ class SpectrogramFactory:
         if not os.path.isdir(load_dir):
             raise NotADirectoryError(f"The directory doesn't exist: {load_dir}")
 
+        # Lambda function to get the file path
         spath = lambda x: os.path.normpath(os.path.join(load_dir, x + ".pkl"))
 
-        with open(os.path.join(load_dir, "config.json")) as file:
+        # open the config
+        with open(os.path.join(load_dir, "config.json"), encoding="utf-8") as file:
             json_config : dict = json.load(file)
-            if json_config.get("version", "0.0.0") != __version__:
-                warnings.warn(
-                    f"Found factory saved on version {json_config.get('version', '0.0.0')}. "
-                    "Current version is {__version__}. Factory might be broken, either install "
-                    "correct version or use at your own risk")
+
+        # Get the version saved and assert the compatibility with current version
+        config_version = json_config.get('version', '0.0.0')
+        if not are_versions_compatible(config_version, __version__):
+            raise VersionNotCompatibleException(
+                f"Version saved : {config_version} isn't compatible with {__version__}")
+
         with open(spath("data_processor"), "rb") as file:
             data_processor = pickle.load(file)
         with open(spath("stft_processor"), "rb") as file:
@@ -155,13 +159,16 @@ class SpectrogramFactory:
 
         Args:
             audio_array (np.ndarray):
-                A numpy array representing the audio data. The shape of the array should be (num_channels, samples).
+                A numpy array representing the audio data.
+                The shape of the array should be (num_channels, samples).
 
         Raises:
             WrongConfigurationException:
-                If the number of channels in the audio array does not match the expected number of channels in the configuration.
+                If the number of channels in the audio array does not match
+                the expected number of channels in the configuration.
             WrongConfigurationException:
-                If the audio length or audio padding function is not provided in the configuration.
+                If the audio length or audio padding function is not provided
+                in the configuration.
 
         Returns:
             MultiSpectrogram:

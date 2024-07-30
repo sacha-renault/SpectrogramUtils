@@ -126,13 +126,20 @@ class SpectrogramTorchFactory(SpectrogramFactory):
         Examples:
             Generating batches from a list of file paths:
             >>> file_list = ["file1.wav", "file2.wav", "file3.wav"]
-            >>> generator = factory.get_torch_dataset_batch_generator(file_list, use_processor=True, batch_size=2, device_or_obj='cpu')
+            >>> generator = factory.get_torch_dataset_batch_generator(
+                    file_list,
+                    use_processor=True,
+                    batch_size=2,
+                    device_or_obj='cpu')
             >>> for batch in generator:
             >>>     print(batch)
 
             Generating batches from a pre-loaded tensor:
             >>> tensor = torch.randn(100, 20)
-            >>> generator = factory.get_torch_dataset_batch_generator(tensor, batch_size=10, device_or_obj='cuda')
+            >>> generator = factory.get_torch_dataset_batch_generator(
+                    tensor,
+                    batch_size=10,
+                    device_or_obj='cuda')
             >>> for batch in generator:
             >>>     print(batch)
         """
