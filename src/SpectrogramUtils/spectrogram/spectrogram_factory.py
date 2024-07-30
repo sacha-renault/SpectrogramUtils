@@ -19,7 +19,7 @@ from ..misc.utils import get_multi_stft
 from ..exceptions.lib_exceptions import WrongConfigurationException, BadTypeException
 from ..stft_complexe_processor.abstract_stft_processor import AbstractStftComplexProcessor
 from ..stft_complexe_processor.real_imag_stft_processor import RealImageStftProcessor
-from ..data.types import MixedPrecision2DArray
+from ..data.types import MixedPrecision2DArray, AudioPaddingFunction
 from .._version import version as __version__
 
 
@@ -29,7 +29,7 @@ class SpectrogramFactory:
                 config : Config,
                 stft_processor : Optional[AbstractStftComplexProcessor] = None,
                 data_processor : Optional[AbstractDataProcessor] = None,
-                audio_padder : Optional[Callable[[np.ndarray, int], np.ndarray]] = AudioPadding.NONE,
+                audio_padder : Optional[AudioPaddingFunction] = AudioPadding.NONE,
                 ordering : ListOrdering = ListOrdering.ALTERNATE
                 ) -> None:
         # Set the config
