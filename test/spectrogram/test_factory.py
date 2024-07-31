@@ -4,10 +4,10 @@ import numpy as np
 import librosa
 
 from src.SpectrogramUtils import SpectrogramFactory, Config, ScalerAudioProcessor, AudioPadding, \
-    SimpleScalingProcessor, LibrosaSTFTArgs, MultiSpectrogram, RealImageStftProcessor
+    SimpleScalingProcessor, LibrosaSTFTArgs, MultiSpectrogram
 from src.SpectrogramUtils.exceptions.lib_exceptions import \
-    WrongConfigurationException, BadTypeException, VersionNotCompatibleException
-from src.SpectrogramUtils.misc.utils import get_forward_indexer_amplitude_phase
+    WrongConfigurationException, BadTypeException
+from src.SpectrogramUtils.misc.indexers import get_forward_indexer_amplitude_phase
 from src.SpectrogramUtils._version import VERSION as __version__
 
 def test_factory_constructor_success():

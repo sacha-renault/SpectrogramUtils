@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..exceptions.lib_exceptions import UnknownStftShapeException
-from ..data.types import Complex2DArray, MixedPrecision2DArray, ArangementPermutation
+from ..data.types import Complex2DArray, MixedPrecision2DArray
 
 def get_backward_indexer(forward_indexer : npt.NDArray[np.int_]) -> npt.NDArray[np.int_]:
     """For a given forward indexer, check it is valid and get it's backward indexing
@@ -106,13 +106,3 @@ def center_pad_rcut(data : MixedPrecision2DArray, desired_audio_length : int) ->
 
     # Else
     return data[:,:desired_audio_length]
-
-def get_forward_indexer_amplitude_phase(num_channel : int, dim_per_channel : int = 2) -> ArangementPermutation:
-    """get an indexer that allows to get data as [Amplitude, Amplitude, ..., Phase, Phase, ...]
-
-    Args:
-        - num_channel (int): number of channel in the audio
-        - dim_per_channel (int, optional): number of dimension made by one channel. See AbstractStftComplexProcessor->shape. Defaults to 2.
-    """
-    arangement = np.arange(num_channel * dim_per_channel)
-    return np.concatenate((arangement[::2], arangement[1::2]))

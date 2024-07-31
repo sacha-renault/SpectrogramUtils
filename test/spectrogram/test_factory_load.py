@@ -2,13 +2,12 @@ import pytest
 from unittest.mock import patch, mock_open
 import json
 import pickle
-from packaging import version
 
 from src.SpectrogramUtils import SpectrogramFactory, Config, AudioPadding, \
     SimpleScalingProcessor, RealImageStftProcessor
 from src.SpectrogramUtils.exceptions.lib_exceptions import \
    VersionNotCompatibleException
-from src.SpectrogramUtils.misc.utils import get_forward_indexer_amplitude_phase
+from src.SpectrogramUtils.misc.indexers import get_forward_indexer_amplitude_phase
 from src.SpectrogramUtils._version import VERSION as __version__
 
 def test_factory_load():

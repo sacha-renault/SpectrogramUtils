@@ -6,7 +6,8 @@ import numpy as np
 import numpy.typing as npt
 
 # Array types
-MixedPrecision2DArray = Union[npt.NDArray[np.float32], npt.NDArray[np.float64]]
+MixedPrecision2DArray = Union[npt.NDArray[np.float32], npt.NDArray[np.float64]] \
+    # pylint: disable=invalid-name
 Complex2DArray = npt.NDArray[np.float32]
 Complex3DArray = npt.NDArray[np.float32]
 
