@@ -48,8 +48,8 @@ files = [
 spectrograms = factory.get_spectrograms_from_files(files)
 ```
 
-You can specify argument that will be used during stft and istft process in the configuration object : 
-```python 
+You can specify argument that will be used during stft and istft process in the configuration object :
+```python
 from SpectrogramUtils import Config, LibrosaSTFTArgs
 
 stft_config = LibrosaSTFTArgs(n_fft = 512, hop_length = ...) # specify any arg that can be used during a normal stft process except dtype and pad_mode
@@ -263,56 +263,56 @@ for i, spectrogram in enumerate(output_spectrograms):
 ### f - Indexers
 
 Indexers allows to change the order amplitude and phase. When the datas are passed from a list of complexe 2D array to a float 3D array, it set the amplitude every 2\*n, and phase every 2\*n + 1. For a 3 channel audio, we would have [A1, P1, A2, P2, A3, P3] (An and Pn being Amplitude and Phase of channel n).
-You can set a new indexer, it must follow those rules : 
+You can set a new indexer, it must follow those rules :
 - must be a 1D int array.
 - must be equivalent to an arangement when sorted.
 - the dimension at axis 0 must be equal to dimension at axis 0 of the result of AbstractStftComplexProcessor.
 
 ```python
-from SpectrogramUtils.misc.utils import get_forward_indexer_amplitude_phase
+import SpectrogramUtils.misc.indexers as indexers
 
-indexer = get_forward_indexer_amplitude_phase(3, 2) # example for 3 channel in the audio and StftProcessor produce 2 array per channel.
+indexer = indexers.get_forward_indexer_amplitude_phase(3, 2) # example for 3 channel in the audio and StftProcessor produce 2 array per channel.
 factory = SpectrogramFactory(config, data_processor = processor, audio_padder = AudioPadding.RPAD_RCUT, forward_indexer = indexer)
 ```
 
 ### g - Extensions
 You can use torch or tensorflow extension for the factory. I allows to get dataset as Tensors instead of numpy arrays.
 
-```python 
-from SpectrogramUtils.extension import SpectrogramTorchFactory # Will raise an error if torch isn't installed 
+```python
+from SpectrogramUtils.extension import SpectrogramTorchFactory # Will raise an error if torch isn't installed
 
-# You can now use 
+# You can now use
 files = ... # list of file to load, could also do it with audio arrays already loaded
 dataset = factory.get_torch_dataset(files, True, "cuda") # get a torch.Tensor loaded on cuda device
 ```
 
-Torch extension contains a method to create a batch generator. It can be used from two different ways. 
+Torch extension contains a method to create a batch generator. It can be used from two different ways.
 - From an existing Tensor, it moves one batch at a time on the target device
 ```python
 dataset = factory.get_torch_dataset(files, True, "cpu") # In the case the dataset is too large to be put directly on cuda
 generator = factory.get_torch_dataset_batch_generator(dataset, batch_size = 16, "cuda", infinite_generator = False) # infinite_generator = False will make the generator raise StopIteration once it has run accross all the dataset
-for batch in generator: 
-    # Do things with your batch 
-``` 
+for batch in generator:
+    # Do things with your batch
+```
 - From files, it loads one batch a time on target device.
 ```python
 files = ... # File in the dataset
 generator = factory.get_torch_dataset_batch_generator(dataset, batch_size = 16, "cuda", infinite_generator = False) # infinite_generator = False will make the generator raise StopIteration once it has run accross all the dataset
-for batch in generator: 
-    # Do things with your batch 
-``` 
+for batch in generator:
+    # Do things with your batch
+```
 
 ### e - Stft processing
-The goal of this library is to get real value array for DL usage from complexe stft array. There is two ways implemented at the current time. 
-For a complexe stft array shaped (n, h, w) : 
-- RealImageStftProcessor will return a real array of shape (2 * n, h, w) following : 
+The goal of this library is to get real value array for DL usage from complexe stft array. There is two ways implemented at the current time.
+For a complexe stft array shaped (n, h, w) :
+- RealImageStftProcessor will return a real array of shape (2 * n, h, w) following :
 
 ![Real_{(2k, i, j)} = \mathfrak{Re}(\operatorname{Complexe}_{(k, i, j)})](https://latex.codecogs.com/svg.latex?Real_{(2k,%20i,%20j)}%20=%20\mathfrak{Re}(\operatorname{Complexe}_{(k,%20i,%20j)}))
 
 ![Real_{(2k + 1, i, j)} = \mathfrak{Im}(\operatorname{Complexe}_{(k, i, j)})](https://latex.codecogs.com/svg.latex?Real_{(2k%20+%201,%20i,%20j)}%20=%20\mathfrak{Im}(\operatorname{Complexe}_{(k,%20i,%20j)}))
 
 
-- MagnitudePhaseStftProcessor will return a real array of shape (2 * n, h, w) following : 
+- MagnitudePhaseStftProcessor will return a real array of shape (2 * n, h, w) following :
 
 ![Real_{(2k, i, j)} = |\operatorname{Complexe}_{(k, i, j)}|](https://latex.codecogs.com/svg.latex?Real_{(2k,%20i,%20j)}%20=%20|\operatorname{Complexe}_{(k,%20i,%20j)}|)
 
@@ -322,11 +322,11 @@ For a complexe stft array shaped (n, h, w) :
 ```python
 # Imports
 from SpectrogramUtils import RealImageStftProcessor, MagnitudePhaseStftProcessor
-... 
+...
 
 # Instanciate
 config = ...
-data_processor = ... 
+data_processor = ...
 
 # Choose a stft processor
 stft_processor = RealImageStftProcessor # or = MagnitudePhaseStftProcessor
@@ -335,7 +335,7 @@ stft_processor = RealImageStftProcessor # or = MagnitudePhaseStftProcessor
 factory = SpectrogramFactory(config = config,
                 stft_processor = stft_processor,
                 data_processor = data_processor,
-                audio_padder = AudioPadding.CENTER_RCUT, 
+                audio_padder = AudioPadding.CENTER_RCUT,
                 forward_indexer = None) # None is no reindexing
 ```
 
